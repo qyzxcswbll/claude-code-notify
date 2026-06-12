@@ -18,7 +18,7 @@
 ## 安装
 
 ```bash
-npx skills add <你的GitHub用户名>/claude-code-notify -g
+npx skills add qyzxcswbll/claude-code-notify -g
 ```
 
 安装后在 Claude Code 中执行 `/notify-setup`，按提示确认权限即可。
