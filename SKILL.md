@@ -34,7 +34,7 @@ metadata:
 ```powershell
 param([string]$Event = 'stop')
 
-$title = "Claude Code"
+$titleBase = "Claude Code"
 
 # 从 stdin 原始文本中提取 transcript_path
 $transcriptPath = ""
@@ -47,13 +47,27 @@ try {
     }
 } catch {}
 
-# 从会话文件提取最后一条用户消息
+# 从会话文件提取项目名和最后一条用户消息
+$projectName = ""
 $context = ""
 if ($transcriptPath -and (Test-Path $transcriptPath)) {
     try {
-        $lines = Get-Content $transcriptPath -Encoding UTF8 -Tail 100
-        for ($i = $lines.Length - 1; $i -ge 0; $i--) {
-            if ($lines[$i] -match '"role"\s*:\s*"user"') {
+        # 从 transcript 头部提取项目名（cwd 字段在第一条 user 消息中）
+        $headLines = Get-Content $transcriptPath -Encoding UTF8 -TotalCount 20
+        foreach ($line in $headLines) {
+            if ($line -match '"cwd"\s*:\s*"([^"]+)"') {
+                $cwd = $matches[1] -replace '\\\\', '\'
+                $projectName = Split-Path $cwd -Leaf
+                break
+            }
+        }
+    } catch {}
+
+    try {
+        # 从 transcript 尾部提取最后一条用户消息
+        $tailLines = Get-Content $transcriptPath -Encoding UTF8 -Tail 100
+        for ($i = $tailLines.Length - 1; $i -ge 0; $i--) {
+            if ($tailLines[$i] -match '"role"\s*:\s*"user"') {
                 try {
                     $msg = $lines[$i] | ConvertFrom-Json
                     $content = $msg.message.content
@@ -70,6 +84,9 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
         }
     } catch {}
 }
+
+# 标题附加项目名
+$title = if ($projectName) { "$titleBase - $projectName" } else { $titleBase }
 
 $body = if ($Event -eq 'stop') {
     if ($context) { "完成: $context" } else { "任务完成" }
@@ -106,8 +123,31 @@ INPUT=$(cat)
 
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path" *: *"[^"]*"' | sed 's/"transcript_path" *: *"\(.*\)"$/\1/' | sed 's/\\\\/\//g')
 
+PROJECT_NAME=""
 CONTEXT=""
+
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+    # 从 transcript 头部提取项目名
+    PROJECT_NAME=$(python3 -c "
+import json, sys
+path = '$TRANSCRIPT_PATH'
+with open(path, 'r', encoding='utf-8') as f:
+    for i, line in enumerate(f):
+        if i >= 20:
+            break
+        try:
+            msg = json.loads(line)
+            msg_content = msg.get('message', {}) if isinstance(msg, dict) else {}
+            if msg_content.get('cwd'):
+                cwd = msg_content['cwd']
+                name = cwd.rstrip('\\\\').split('\\\\')[-1]
+                print(name, end='')
+                break
+        except:
+            pass
+" 2>/dev/null)
+
+    # 从 transcript 尾部提取最后一条用户消息
     CONTEXT=$(python3 -c "
 import json, sys
 path = '$TRANSCRIPT_PATH'
@@ -132,6 +172,11 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
+TITLE="Claude Code"
+if [ -n "$PROJECT_NAME" ]; then
+    TITLE="Claude Code - $PROJECT_NAME"
+fi
+
 if [ "$EVENT" = "stop" ]; then
     if [ -n "$CONTEXT" ]; then
         BODY="完成: $CONTEXT"
@@ -147,7 +192,8 @@ else
 fi
 
 BODY_ESC=$(echo "$BODY" | sed 's/"/\\"/g' | tr '\n' ' ')
-osascript -e "display notification \"$BODY_ESC\" with title \"Claude Code\""
+TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g' | tr '\n' ' ')
+osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""
 ```
 
 写完后执行 `chmod +x ~/.claude/notify`。

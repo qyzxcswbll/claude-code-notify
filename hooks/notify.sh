@@ -5,8 +5,31 @@ INPUT=$(cat)
 
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path" *: *"[^"]*"' | sed 's/"transcript_path" *: *"\(.*\)"$/\1/' | sed 's/\\\\/\//g')
 
+PROJECT_NAME=""
 CONTEXT=""
+
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+    # 从 transcript 头部提取项目名
+    PROJECT_NAME=$(python3 -c "
+import json, sys
+path = '$TRANSCRIPT_PATH'
+with open(path, 'r', encoding='utf-8') as f:
+    for i, line in enumerate(f):
+        if i >= 20:
+            break
+        try:
+            msg = json.loads(line)
+            msg_content = msg.get('message', {}) if isinstance(msg, dict) else {}
+            if msg_content.get('cwd'):
+                cwd = msg_content['cwd']
+                name = cwd.rstrip('\\\\').split('\\\\')[-1]
+                print(name, end='')
+                break
+        except:
+            pass
+" 2>/dev/null)
+
+    # 从 transcript 尾部提取最后一条用户消息
     CONTEXT=$(python3 -c "
 import json, sys
 path = '$TRANSCRIPT_PATH'
@@ -31,6 +54,11 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
+TITLE="Claude Code"
+if [ -n "$PROJECT_NAME" ]; then
+    TITLE="Claude Code - $PROJECT_NAME"
+fi
+
 if [ "$EVENT" = "stop" ]; then
     if [ -n "$CONTEXT" ]; then
         BODY="完成: $CONTEXT"
@@ -46,4 +74,5 @@ else
 fi
 
 BODY_ESC=$(echo "$BODY" | sed 's/"/\\"/g' | tr '\n' ' ')
-osascript -e "display notification \"$BODY_ESC\" with title \"Claude Code\""
+TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g' | tr '\n' ' ')
+osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""

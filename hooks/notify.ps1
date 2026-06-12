@@ -1,6 +1,6 @@
 param([string]$Event = 'stop')
 
-$title = "Claude Code"
+$titleBase = "Claude Code"
 
 # 从 stdin 原始文本中提取 transcript_path
 $transcriptPath = ""
@@ -13,15 +13,29 @@ try {
     }
 } catch {}
 
-# 从会话文件提取最后一条用户消息
+$projectName = ""
 $context = ""
+
 if ($transcriptPath -and (Test-Path $transcriptPath)) {
     try {
-        $lines = Get-Content $transcriptPath -Encoding UTF8 -Tail 100
-        for ($i = $lines.Length - 1; $i -ge 0; $i--) {
-            if ($lines[$i] -match '"role"\s*:\s*"user"') {
+        # 从 transcript 头部提取项目名（cwd 字段在第一条 user 消息中）
+        $headLines = Get-Content $transcriptPath -Encoding UTF8 -TotalCount 20
+        foreach ($line in $headLines) {
+            if ($line -match '"cwd"\s*:\s*"([^"]+)"') {
+                $cwd = $matches[1] -replace '\\\\', '\'
+                $projectName = Split-Path $cwd -Leaf
+                break
+            }
+        }
+    } catch {}
+
+    try {
+        # 从 transcript 尾部提取最后一条用户消息
+        $tailLines = Get-Content $transcriptPath -Encoding UTF8 -Tail 100
+        for ($i = $tailLines.Length - 1; $i -ge 0; $i--) {
+            if ($tailLines[$i] -match '"role"\s*:\s*"user"') {
                 try {
-                    $msg = $lines[$i] | ConvertFrom-Json
+                    $msg = $tailLines[$i] | ConvertFrom-Json
                     $content = $msg.message.content
                     if ($content -is [array]) {
                         $content = ($content | Where-Object { $_.type -eq "text" } | Select-Object -First 1).text
@@ -36,6 +50,9 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
         }
     } catch {}
 }
+
+# 标题附加项目名
+$title = if ($projectName) { "$titleBase - $projectName" } else { $titleBase }
 
 $body = if ($Event -eq 'stop') {
     if ($context) { "完成: $context" } else { "任务完成" }
