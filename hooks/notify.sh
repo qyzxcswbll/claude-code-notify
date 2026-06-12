@@ -9,13 +9,16 @@ INPUT=$(cat)
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path" *: *"[^"]*"' | sed 's/"transcript_path" *: *"\(.*\)"$/\1/' | sed 's/\\\\/\//g')
 
 PROJECT_NAME=""
+SESSION_NAME=""
 CONTEXT=""
 
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    # 从 transcript 头部提取项目名
-    PROJECT_NAME=$(python3 -c "
+    # 从 transcript 头部提取项目名和会话名
+    SESSION_DATA=$(python3 -c "
 import json, sys
 path = '$TRANSCRIPT_PATH'
+project = ''
+session = ''
 with open(path, 'r', encoding='utf-8') as f:
     for i, line in enumerate(f):
         if i >= 20:
@@ -23,14 +26,29 @@ with open(path, 'r', encoding='utf-8') as f:
         try:
             msg = json.loads(line)
             msg_content = msg.get('message', {}) if isinstance(msg, dict) else {}
-            if msg_content.get('cwd'):
+            # 提取项目名
+            if not project and msg_content.get('cwd'):
                 cwd = msg_content['cwd']
-                name = cwd.rstrip('\\\\').split('\\\\')[-1]
-                print(name, end='')
-                break
+                project = cwd.rstrip('\\\\').split('\\\\')[-1]
+            # 提取会话名
+            if not session and msg_content.get('role') == 'user':
+                content = msg_content.get('content', '')
+                if isinstance(content, list):
+                    texts = [c['text'] for c in content if c.get('type') == 'text']
+                    content = texts[0] if texts else ''
+                content = content.replace(chr(10), ' ').replace(chr(13), '').strip()
+                if len(content) > 20:
+                    content = content[:17] + '...'
+                session = content
         except:
             pass
+        if project and session:
+            break
+print(json.dumps({'project': project, 'session': session}))
 " 2>/dev/null)
+
+    PROJECT_NAME=$(echo "$SESSION_DATA" | python3 -c "import sys,json; print(json.load(sys.stdin).get('project',''))" 2>/dev/null)
+    SESSION_NAME=$(echo "$SESSION_DATA" | python3 -c "import sys,json; print(json.load(sys.stdin).get('session',''))" 2>/dev/null)
 
     # 从 transcript 尾部提取最后一条用户消息
     CONTEXT=$(python3 -c "
@@ -57,9 +75,13 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
-TITLE="Claude Code"
-if [ -n "$PROJECT_NAME" ]; then
-    TITLE="Claude Code - $PROJECT_NAME"
+# 标题：项目名 - 会话描述（去掉重复的 "Claude Code"）
+if [ -n "$PROJECT_NAME" ] && [ -n "$SESSION_NAME" ]; then
+    TITLE="$PROJECT_NAME - $SESSION_NAME"
+elif [ -n "$PROJECT_NAME" ]; then
+    TITLE="$PROJECT_NAME"
+else
+    TITLE="Claude Code"
 fi
 
 if [ "$EVENT" = "stop" ]; then

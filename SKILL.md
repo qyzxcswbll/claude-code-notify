@@ -224,15 +224,15 @@ osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""
 
 写完后执行 `chmod +x ~/.claude/notify`。
 
-#### Windows 开关脚本（可选）
+#### Windows 开关脚本
 
-写入 `~/.claude/notify-toggle.ps1`（同 notify.ps1 的编码要求）。
+写入 `~/.claude/notify-toggle.ps1`（UTF-8 BOM 编码，同 notify.ps1）。内容从本项目的 `hooks/notify-toggle.ps1` 读取。
 
-写入 `~/.claude/notify-toggle.bat`（纯 ASCII，无需特殊编码）。
+写入 `~/.claude/notify-toggle.bat`（纯 ASCII）。内容从本项目的 `hooks/notify-toggle.bat` 读取。
 
-#### macOS 开关脚本（可选）
+#### macOS 开关脚本
 
-写入 `~/.claude/notify-toggle.sh`，执行 `chmod +x ~/.claude/notify-toggle.sh`。
+写入 `~/.claude/notify-toggle.sh`，执行 `chmod +x ~/.claude/notify-toggle.sh`。内容从本项目的 `hooks/notify-toggle.sh` 读取。
 
 ### 3. 配置 hooks
 
