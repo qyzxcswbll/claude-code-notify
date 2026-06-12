@@ -21,7 +21,12 @@
 npx skills add qyzxcswbll/claude-code-notify -g
 ```
 
-安装后在 Claude Code 中执行 `/notify-setup`，按提示确认权限即可。
+安装后在 Claude Code 中执行以下任一方式完成配置：
+
+- **CLI 版**（终端）：输入 `/notify-setup`
+- **VSCode 版**（聊天框）：直接说 **「配置桌面通知」**，AI 会自动执行
+
+按提示确认权限即可。
 
 <details>
 <summary><b>从零手动配置（不使用 skill）</b></summary>
