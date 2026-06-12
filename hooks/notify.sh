@@ -1,6 +1,11 @@
 #!/bin/bash
 EVENT=${1:-stop}
 
+# ====== 通知开关：把下面的 true 改成 false 就关闭通知弹窗 ======
+NOTIFY_ENABLED=true
+
+if [ "$NOTIFY_ENABLED" != "true" ]; then exit 0; fi
+
 INPUT=$(cat)
 
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path" *: *"[^"]*"' | sed 's/"transcript_path" *: *"\(.*\)"$/\1/' | sed 's/\\\\/\//g')

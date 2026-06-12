@@ -1,5 +1,8 @@
 param([string]$Event = 'stop')
 
+# ====== 通知开关：把下面的 $true 改成 $false 就关闭通知弹窗 ======
+$notifyEnabled = $true
+
 $titleBase = "Claude Code"
 
 # 从 stdin 原始文本中提取 transcript_path
@@ -59,6 +62,9 @@ $body = if ($Event -eq 'stop') {
 } else {
     if ($context) { $context } else { "需要你回应" }
 }
+
+# 开关检测——关闭则不弹窗
+if (-not $notifyEnabled) { exit 0 }
 
 # Windows Toast（优先）
 try {

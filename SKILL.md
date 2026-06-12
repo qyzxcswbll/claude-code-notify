@@ -49,6 +49,9 @@ metadata:
 ```powershell
 param([string]$Event = 'stop')
 
+# ====== 通知开关：把下面的 $true 改成 $false 就关闭通知弹窗 ======
+$notifyEnabled = $true
+
 $titleBase = "Claude Code"
 
 # 从 stdin 原始文本中提取 transcript_path
@@ -109,6 +112,9 @@ $body = if ($Event -eq 'stop') {
     if ($context) { $context } else { "需要你回应" }
 }
 
+# 开关检测——关闭则不弹窗
+if (-not $notifyEnabled) { exit 0 }
+
 # Windows Toast（优先）
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
@@ -133,6 +139,11 @@ try { msg * "Claude Code: $body" 2>$null } catch {}
 ```bash
 #!/bin/bash
 EVENT=${1:-stop}
+
+# ====== 通知开关：把下面的 true 改成 false 就关闭通知弹窗 ======
+NOTIFY_ENABLED=true
+
+if [ "$NOTIFY_ENABLED" != "true" ]; then exit 0; fi
 
 INPUT=$(cat)
 
@@ -298,6 +309,22 @@ echo '{}' | bash ~/.claude/notify stop
 ```
 
 无报错即成功。告知用户配置完成，之后每次 Claude 完成任务或需要回应时都会弹出通知。
+
+### 5. 开关通知（可选）
+
+如果临时不需要通知，可以关闭。以后想再开也是一样的操作。
+
+**Windows：**
+1. 打开 `%USERPROFILE%\.claude\notify.ps1`
+2. 把第 4 行的 `$notifyEnabled = $true` 改成 `$false`
+3. 保存即可
+
+**macOS：**
+1. 打开 `~/.claude/notify`
+2. 把第 4 行的 `NOTIFY_ENABLED=true` 改成 `false`
+3. 保存即可
+
+改回来就把 `$false` 改回 `$true`。
 
 ## 注意事项（给 AI 自己看）
 
