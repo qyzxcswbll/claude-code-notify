@@ -57,8 +57,6 @@ param([string]$Event = 'stop')
 # 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
 if (Test-Path (Join-Path $env:USERPROFILE '.claude\.notifymute')) { exit 0 }
 
-$titleBase = "Claude Code"
-
 # 从 stdin 原始文本中提取 transcript_path
 $transcriptPath = ""
 try {
@@ -70,19 +68,30 @@ try {
     }
 } catch {}
 
-# 从会话文件提取项目名和最后一条用户消息
 $projectName = ""
+$sessionName = ""
 $context = ""
+
 if ($transcriptPath -and (Test-Path $transcriptPath)) {
     try {
-        # 从 transcript 头部提取项目名（cwd 字段在第一条 user 消息中）
         $headLines = Get-Content $transcriptPath -Encoding UTF8 -TotalCount 20
         foreach ($line in $headLines) {
-            if ($line -match '"cwd"\s*:\s*"([^"]+)"') {
+            if (-not $projectName -and ($line -match '"cwd"\s*:\s*"([^"]+)"')) {
                 $cwd = $matches[1] -replace '\\\\', '\'
                 $projectName = Split-Path $cwd -Leaf
-                break
             }
+            if (-not $sessionName -and ($line -match '"role"\s*:\s*"user"')) {
+                try {
+                    $msg = $line | ConvertFrom-Json
+                    $content = $msg.message.content
+                    if ($content -is [array]) { $content = ($content | Where-Object { $_.type -eq "text" } | Select-Object -First 1).text }
+                    if ($content) {
+                        $sessionName = ($content -replace "`n", " ").Trim()
+                        if ($sessionName.Length -gt 5) { $sessionName = $sessionName.Substring(0, 5) }
+                    }
+                } catch {}
+            }
+            if ($projectName -and $sessionName) { break }
         }
     } catch {}
 
@@ -92,7 +101,7 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
         for ($i = $tailLines.Length - 1; $i -ge 0; $i--) {
             if ($tailLines[$i] -match '"role"\s*:\s*"user"') {
                 try {
-                    $msg = $lines[$i] | ConvertFrom-Json
+                    $msg = $tailLines[$i] | ConvertFrom-Json
                     $content = $msg.message.content
                     if ($content -is [array]) {
                         $content = ($content | Where-Object { $_.type -eq "text" } | Select-Object -First 1).text
@@ -108,22 +117,31 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
     } catch {}
 }
 
-# 标题附加项目名
-$title = if ($projectName) { "$titleBase - $projectName" } else { $titleBase }
+# 标题：项目名（第一行）
+$title = if ($projectName) { $projectName } else { "Claude Code" }
 
-$body = if ($Event -eq 'stop') {
-    if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
+# 副标题：会话名（第二行，带图标）
+$subtitle = if ($sessionName) { "⚙️ $sessionName" } else { "" }
+
+# 内容：第三行
+$isStop = ($Event -eq 'stop')
+if ($isStop) {
+    $body = if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
 } else {
-    if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
+    $body = if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
 }
 
-# Windows Toast（优先）
+# Windows Toast（三行层级）
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
     $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
     $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-    $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast duration=""short""><visual><binding template=""ToastText02""><text id=""1"">$title</text><text id=""2"">$body</text></binding></visual></toast>"
+    if ($subtitle) {
+        $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText04""><text id=""1"">$title</text><text id=""2"">$subtitle</text><text id=""3"">$body</text></binding></visual></toast>"
+    } else {
+        $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText02""><text id=""1"">$title</text><text id=""2"">$body</text></binding></visual></toast>"
+    }
     $xml.LoadXml($toastXml)
     $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
@@ -150,13 +168,16 @@ INPUT=$(cat)
 TRANSCRIPT_PATH=$(echo "$INPUT" | grep -o '"transcript_path" *: *"[^"]*"' | sed 's/"transcript_path" *: *"\(.*\)"$/\1/' | sed 's/\\\\/\//g')
 
 PROJECT_NAME=""
+SESSION_NAME=""
 CONTEXT=""
 
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    # 从 transcript 头部提取项目名
-    PROJECT_NAME=$(python3 -c "
+    # 从 transcript 头部提取项目名和会话名（前 5 字）
+    META=$(python3 -c "
 import json, sys
 path = '$TRANSCRIPT_PATH'
+project = ''
+session = ''
 with open(path, 'r', encoding='utf-8') as f:
     for i, line in enumerate(f):
         if i >= 20:
@@ -164,14 +185,24 @@ with open(path, 'r', encoding='utf-8') as f:
         try:
             msg = json.loads(line)
             msg_content = msg.get('message', {}) if isinstance(msg, dict) else {}
-            if msg_content.get('cwd'):
-                cwd = msg_content['cwd']
-                name = cwd.rstrip('\\\\').split('\\\\')[-1]
-                print(name, end='')
-                break
+            if not project and msg.get('cwd'):
+                cwd = msg.get('cwd')
+                project = cwd.rstrip('\\\\').split('\\\\')[-1]
+            if not session and msg_content.get('role') == 'user':
+                content = msg_content.get('content', '')
+                if isinstance(content, list):
+                    texts = [c['text'] for c in content if c.get('type') == 'text']
+                    content = texts[0] if texts else ''
+                session = content.replace(chr(10), ' ').replace(chr(13), '').strip()[:5]
         except:
             pass
+        if project and session:
+            break
+print(json.dumps({'project': project, 'session': session}))
 " 2>/dev/null)
+
+    PROJECT_NAME=$(echo "$META" | python3 -c "import sys,json; print(json.load(sys.stdin).get('project',''))" 2>/dev/null)
+    SESSION_NAME=$(echo "$META" | python3 -c "import sys,json; print(json.load(sys.stdin).get('session',''))" 2>/dev/null)
 
     # 从 transcript 尾部提取最后一条用户消息
     CONTEXT=$(python3 -c "
@@ -198,9 +229,16 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
-TITLE="Claude Code"
+# 标题：项目名（第一行）
 if [ -n "$PROJECT_NAME" ]; then
-    TITLE="Claude Code - $PROJECT_NAME"
+    TITLE="$PROJECT_NAME"
+else
+    TITLE="Claude Code"
+fi
+
+# 副标题：会话名附加到标题行（macOS 只有两行）
+if [ -n "$SESSION_NAME" ]; then
+    TITLE="$TITLE ⚙️ $SESSION_NAME"
 fi
 
 if [ "$EVENT" = "stop" ]; then
