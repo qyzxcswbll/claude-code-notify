@@ -1,7 +1,22 @@
 ---
 name: notify-setup
-description: 一键配置 Claude Code 桌面通知（Windows 弹窗 / macOS 通知中心）
+description: >
+  [中文] 一键配置 Claude Code 桌面通知。离开去做其他事，任务完成时自动弹窗通知你，不用一直盯着终端。
+  [English] One-click setup for Claude Code desktop notifications. Walk away while tasks run—get a native popup when done.
+license: MIT
+compatibility: Windows 10/11 (Toast notification) + macOS (Notification Center)
 metadata:
+  author: qyzxcswbll
+  version: "1.0.0"
+  tags:
+    - notify
+    - notification
+    - desktop
+    - windows
+    - macos
+    - toast
+    - alert
+    - hook
   agents:
     - claude-code
 ---
