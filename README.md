@@ -10,7 +10,8 @@
 ## Feature
 
 - 🔔 **桌面通知** — 任务完成或需要你回应时，系统原生弹窗，不打断操作
-- 📝 **带上下文** — 通知内容显示你最后一条输入，一眼知道是哪个任务
+- 📝 **三行层级** — 项目名 + 💎 会话名 + 任务内容，一目了然
+- 🗣️ **语音开关** — 直接说"关掉通知"/"打开通知"，AI 帮你搞定
 - ⚡️ **零依赖** — 无需安装任何第三方包，调用 Windows/macOS 原生通知 API
 - 🪄 **一次配置永久生效** — skill 一键安装，一条命令完成配置，以后自动通知
 - 🖥️ **跨平台** — Windows 10/11 Toast 通知 & macOS 通知中心
@@ -36,7 +37,9 @@ npx skills add qyzxcswbll/claude-code-notify -g
 
 ## 开关通知
 
-临时不需要通知时，运行一次开关脚本关闭，再运行一次重新开启。
+临时不需要通知时，直接对 Claude Code 说 **「关掉通知」** 即可。想恢复时说 **「打开通知」**。
+
+也可以用脚本操作：
 
 - **Windows**：双击 `%USERPROFILE%\.claude\notify-toggle.bat`，或 Win+R 运行：
   ```
@@ -73,10 +76,19 @@ npx skills add qyzxcswbll/claude-code-notify -g
 
 ## 效果预览
 
-| 事件 | 通知内容 |
-|------|---------|
-| `Stop` — 任务完成 | 完成: 帮我把这个项目里的所有 .ts 文件重构为 .js |
-| `Notification` — 需要你回应 | 需要你回应: 确认是否要删除这个文件 |
+```
+┌──────────────────────────────────────┐
+│ Claude Code                     — ✕ │
+│ claude-code-notify                   │  ← 项目名
+│ 💎 重构                              │  ← 会话名（取前 5 字）
+│ ✨ 搞定了: 帮我把所有 .ts 重构为 .js │  ← 任务内容
+└──────────────────────────────────────┘
+```
+
+| 事件 | 效果 |
+|------|------|
+| `Stop` — 任务完成 | ✨ 搞定了: xxx |
+| `Notification` — 需要你回应 | 💬 需要你瞅一眼: xxx |
 
 ## 功能对比
 
@@ -93,6 +105,14 @@ npx skills add qyzxcswbll/claude-code-notify -g
 - **为什么用 skill 而不是直接安装？**
 
   skill 只需要一次 `/notify-setup` 调用，AI 自动完成脚本创建和配置注入。不需要你手动新建文件、复制粘贴代码、编辑 JSON。
+
+- **如何更新到最新版本？**
+
+  重新安装并重新配置：
+  ```bash
+  npx skills add qyzxcswbll/claude-code-notify -g --yes
+  ```
+  然后在 Claude Code 中说「配置桌面通知」重新生成脚本。
 
 - **安装后通知没有弹出来？**
 
