@@ -34,6 +34,20 @@ npx skills add qyzxcswbll/claude-code-notify -g
 如果你不想安装 skill，可以手动创建脚本文件和修改 `~/.claude/settings.json`，步骤见 [SKILL.md](SKILL.md)。
 </details>
 
+## 开关通知
+
+临时不需要通知时，运行一次开关脚本关闭，再运行一次重新开启。
+
+- **Windows**：双击 `%USERPROFILE%\.claude\notify-toggle.bat`，或 Win+R 运行：
+  ```
+  %USERPROFILE%\.claude\notify-toggle.bat
+  ```
+
+- **macOS**：双击 `~/.claude/notify-toggle.sh`，或终端运行：
+  ```bash
+  bash ~/.claude/notify-toggle.sh
+  ```
+
 ## 使用示例
 
 ### 🎯 场景一：后台跑长任务
