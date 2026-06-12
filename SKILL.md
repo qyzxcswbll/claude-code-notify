@@ -107,9 +107,9 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
 $title = if ($projectName) { "$titleBase - $projectName" } else { $titleBase }
 
 $body = if ($Event -eq 'stop') {
-    if ($context) { "完成: $context" } else { "任务完成" }
+    if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
 } else {
-    if ($context) { $context } else { "需要你回应" }
+    if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
 }
 
 # Windows Toast（优先）
@@ -200,15 +200,15 @@ fi
 
 if [ "$EVENT" = "stop" ]; then
     if [ -n "$CONTEXT" ]; then
-        BODY="完成: $CONTEXT"
+        BODY="✨ 搞定了: $CONTEXT"
     else
-        BODY="任务完成"
+        BODY="✨ 搞定了~"
     fi
 else
     if [ -n "$CONTEXT" ]; then
-        BODY="$CONTEXT"
+        BODY="💬 需要你瞅一眼: $CONTEXT"
     else
-        BODY="需要你回应"
+        BODY="💬 需要你瞅一眼"
     fi
 fi
 

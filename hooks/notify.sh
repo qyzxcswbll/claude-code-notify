@@ -64,15 +64,15 @@ fi
 
 if [ "$EVENT" = "stop" ]; then
     if [ -n "$CONTEXT" ]; then
-        BODY="完成: $CONTEXT"
+        BODY="✨ 搞定了: $CONTEXT"
     else
-        BODY="任务完成"
+        BODY="✨ 搞定了~"
     fi
 else
     if [ -n "$CONTEXT" ]; then
-        BODY="$CONTEXT"
+        BODY="💬 需要你瞅一眼: $CONTEXT"
     else
-        BODY="需要你回应"
+        BODY="💬 需要你瞅一眼"
     fi
 fi
 
