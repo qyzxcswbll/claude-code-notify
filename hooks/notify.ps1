@@ -22,22 +22,18 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
     try {
         $headLines = Get-Content $transcriptPath -Encoding UTF8 -TotalCount 20
         foreach ($line in $headLines) {
-            # 提取项目名
             if (-not $projectName -and ($line -match '"cwd"\s*:\s*"([^"]+)"')) {
                 $cwd = $matches[1] -replace '\\\\', '\'
                 $projectName = Split-Path $cwd -Leaf
             }
-            # 提取会话名（第一条用户消息的前 20 字）
             if (-not $sessionName -and ($line -match '"role"\s*:\s*"user"')) {
                 try {
                     $msg = $line | ConvertFrom-Json
                     $content = $msg.message.content
-                    if ($content -is [array]) {
-                        $content = ($content | Where-Object { $_.type -eq "text" } | Select-Object -First 1).text
-                    }
+                    if ($content -is [array]) { $content = ($content | Where-Object { $_.type -eq "text" } | Select-Object -First 1).text }
                     if ($content) {
                         $sessionName = ($content -replace "`n", " ").Trim()
-                        if ($sessionName.Length -gt 20) { $sessionName = $sessionName.Substring(0, 17) + "..." }
+                        if ($sessionName.Length -gt 5) { $sessionName = $sessionName.Substring(0, 5) }
                     }
                 } catch {}
             }
@@ -67,16 +63,13 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
     } catch {}
 }
 
-# 标题：项目名 - 会话描述（去掉重复的 "Claude Code"）
-if ($projectName -and $sessionName) {
-    $title = "$projectName - $sessionName"
-} elseif ($projectName) {
-    $title = $projectName
-} else {
-    $title = "Claude Code"
-}
+# 标题：项目名（第一行）
+$title = if ($projectName) { $projectName } else { "Claude Code" }
 
-# 事件类型与显示文案
+# 副标题：会话名（第二行，层级感）
+$subtitle = if ($sessionName) { "💎 $sessionName" } else { "" }
+
+# 内容：第三行
 $isStop = ($Event -eq 'stop')
 if ($isStop) {
     $body = if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
@@ -84,13 +77,17 @@ if ($isStop) {
     $body = if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
 }
 
-# Windows Toast（优先）
+# Windows Toast（三行层级）
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
     $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
     $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-    $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText02""><text id=""1"">$title</text><text id=""2"">$body</text></binding></visual></toast>"
+    if ($subtitle) {
+        $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText04""><text id=""1"">$title</text><text id=""2"">$subtitle</text><text id=""3"">$body</text></binding></visual></toast>"
+    } else {
+        $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText02""><text id=""1"">$title</text><text id=""2"">$body</text></binding></visual></toast>"
+    }
     $xml.LoadXml($toastXml)
     $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
