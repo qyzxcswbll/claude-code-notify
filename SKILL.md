@@ -49,8 +49,8 @@ metadata:
 ```powershell
 param([string]$Event = 'stop')
 
-# ====== 通知开关：把下面的 $true 改成 $false 就关闭通知弹窗 ======
-$notifyEnabled = $true
+# 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
+if (Test-Path (Join-Path $env:USERPROFILE '.claude\.notifymute')) { exit 0 }
 
 $titleBase = "Claude Code"
 
@@ -112,9 +112,6 @@ $body = if ($Event -eq 'stop') {
     if ($context) { $context } else { "需要你回应" }
 }
 
-# 开关检测——关闭则不弹窗
-if (-not $notifyEnabled) { exit 0 }
-
 # Windows Toast（优先）
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
@@ -140,10 +137,8 @@ try { msg * "Claude Code: $body" 2>$null } catch {}
 #!/bin/bash
 EVENT=${1:-stop}
 
-# ====== 通知开关：把下面的 true 改成 false 就关闭通知弹窗 ======
-NOTIFY_ENABLED=true
-
-if [ "$NOTIFY_ENABLED" != "true" ]; then exit 0; fi
+# 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
+if [ -f "$HOME/.claude/.notifymute" ]; then exit 0; fi
 
 INPUT=$(cat)
 
@@ -312,19 +307,11 @@ echo '{}' | bash ~/.claude/notify stop
 
 ### 5. 开关通知（可选）
 
-如果临时不需要通知，可以关闭。以后想再开也是一样的操作。
+临时不需要通知时，双击运行一次开关脚本，通知就会关闭。再运行一次，重新开启。
 
-**Windows：**
-1. 打开 `%USERPROFILE%\.claude\notify.ps1`
-2. 把第 4 行的 `$notifyEnabled = $true` 改成 `$false`
-3. 保存即可
+**Windows：** 双击 `%USERPROFILE%\.claude\notify-toggle.ps1`
 
-**macOS：**
-1. 打开 `~/.claude/notify`
-2. 把第 4 行的 `NOTIFY_ENABLED=true` 改成 `false`
-3. 保存即可
-
-改回来就把 `$false` 改回 `$true`。
+**macOS：** 双击 `~/.claude/notify-toggle.sh`，或终端执行 `bash ~/.claude/notify-toggle.sh`
 
 ## 注意事项（给 AI 自己看）
 

@@ -1,7 +1,7 @@
 param([string]$Event = 'stop')
 
-# ====== 通知开关：把下面的 $true 改成 $false 就关闭通知弹窗 ======
-$notifyEnabled = $true
+# 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
+if (Test-Path (Join-Path $env:USERPROFILE '.claude\.notifymute')) { exit 0 }
 
 $titleBase = "Claude Code"
 
@@ -62,9 +62,6 @@ $body = if ($Event -eq 'stop') {
 } else {
     if ($context) { $context } else { "需要你回应" }
 }
-
-# 开关检测——关闭则不弹窗
-if (-not $notifyEnabled) { exit 0 }
 
 # Windows Toast（优先）
 try {

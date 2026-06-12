@@ -1,10 +1,8 @@
 #!/bin/bash
 EVENT=${1:-stop}
 
-# ====== 通知开关：把下面的 true 改成 false 就关闭通知弹窗 ======
-NOTIFY_ENABLED=true
-
-if [ "$NOTIFY_ENABLED" != "true" ]; then exit 0; fi
+# 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
+if [ -f "$HOME/.claude/.notifymute" ]; then exit 0; fi
 
 INPUT=$(cat)
 
