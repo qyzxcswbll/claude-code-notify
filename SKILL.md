@@ -219,6 +219,16 @@ osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""
 
 写完后执行 `chmod +x ~/.claude/notify`。
 
+#### Windows 开关脚本（可选）
+
+写入 `~/.claude/notify-toggle.ps1`（同 notify.ps1 的编码要求）。
+
+写入 `~/.claude/notify-toggle.bat`（纯 ASCII，无需特殊编码）。
+
+#### macOS 开关脚本（可选）
+
+写入 `~/.claude/notify-toggle.sh`，执行 `chmod +x ~/.claude/notify-toggle.sh`。
+
 ### 3. 配置 hooks
 
 读取 `~/.claude/settings.json`。
@@ -309,9 +319,15 @@ echo '{}' | bash ~/.claude/notify stop
 
 临时不需要通知时，双击运行一次开关脚本，通知就会关闭。再运行一次，重新开启。
 
-**Windows：** 双击 `%USERPROFILE%\.claude\notify-toggle.ps1`
+**Windows：** 双击 `%USERPROFILE%\.claude\notify-toggle.bat`，或 Win+R 运行：
+```
+%USERPROFILE%\.claude\notify-toggle.bat
+```
 
-**macOS：** 双击 `~/.claude/notify-toggle.sh`，或终端执行 `bash ~/.claude/notify-toggle.sh`
+**macOS：** 双击 `~/.claude/notify-toggle.sh`，或终端执行：
+```bash
+bash ~/.claude/notify-toggle.sh
+```
 
 ## 注意事项（给 AI 自己看）
 
