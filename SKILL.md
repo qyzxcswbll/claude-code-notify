@@ -468,3 +468,4 @@ AI 必须严格按以下步骤执行：
 - **macOS 通知**：已使用环境变量传参，不再需要手动转义双引号
 - **Windows hooks 命令路径必须用绝对路径**（`C:\Users\xxx\.claude\notify.ps1`），`%USERPROFILE%` 在 VSCode Claude Code hook 环境中不会被展开。安装时用 `$env:USERPROFILE` 展开后写入 JSON
 - **修改 settings.json 时，必须使用 Node.js 或 Python 脚本进行安全的 JSON 解析和合并**，绝对不允许使用正则表达式或字符串替换，以免破坏用户原有的配置结构
+- **Windows 执行策略**：如果用户提示「无法加载文件，因为在此系统上禁止运行脚本」，请在管理员 PowerShell 中执行 `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`，Hook 命令中已内置 `-ExecutionPolicy Bypass` 参数绕过
