@@ -76,21 +76,27 @@ if (Test-Path $notifyModePath) {
     }
 }
 
+# XML 转义函数（防止用户输入含 <>& 导致 Toast 崩溃）
+function Escape-Xml([string]$text) {
+    if (-not $text) { return "" }
+    return [System.Security.SecurityElement]::Escape($text)
+}
+
 # 标题：项目名（第一行）
-$title = if ($projectName) { $projectName } else { "Claude Code" }
+$title = Escape-Xml $(if ($projectName) { $projectName } else { "Claude Code" })
 
 # 副标题：会话名（第二行，层级感）
-$subtitle = if ($sessionName) { "⚙️ $sessionName" } else { "" }
+$subtitle = Escape-Xml $(if ($sessionName) { "⚙ $sessionName" } else { "" })
 
 # 内容：第三行
 $isStop = ($Event -eq 'stop')
 if ($isStop) {
-    $body = if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
+    $body = Escape-Xml $(if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" })
 } else {
-    $body = if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
+    $body = Escape-Xml $(if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" })
 }
 
-# Windows Toast（三行层级）
+# Windows Toast
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
@@ -104,8 +110,7 @@ try {
     $xml.LoadXml($toastXml)
     $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-    exit 0
-} catch {}
-
-# msg 弹窗（兜底）
-try { msg * "Claude Code: $body" 2>$null } catch {}
+} catch {
+    # 静默失败，绝不阻塞
+}
+exit 0

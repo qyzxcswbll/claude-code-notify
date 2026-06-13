@@ -112,7 +112,8 @@ $form.Add_Paint({
     } else {
         $bodyText = if ($Context) { "$iconWait $Context" } else { "$iconWait 需要你瞅一眼" }
     }
-    $g.DrawString($bodyText, $bodyFont, $bodyBrush, $x0, ($divY + 10))
+    $g.DrawString($bodyText, $bodyFont, $bodyBrush,
+        [System.Drawing.RectangleF]::new($x0, ($divY + 10), ($fw2 - $x0 - 16), ($fh2 - ($divY + 10) - 50)))
 
     # == 关闭按钮（固定在右下角） ==
     $subFont = New-Object System.Drawing.Font("Segoe UI", 10)

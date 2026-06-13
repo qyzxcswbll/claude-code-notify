@@ -12,7 +12,8 @@ PROJECT_NAME=""
 SESSION_NAME=""
 CONTEXT=""
 
-if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+# python3 检测——不存在则跳过上下文解析，直接发基础通知
+if command -v python3 &> /dev/null && [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     # 从 transcript 头部提取项目名和会话名（前 5 字）
     META=$(python3 -c "
 import json, sys
@@ -70,33 +71,18 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
-# 标题：项目名（第一行）
-if [ -n "$PROJECT_NAME" ]; then
-    TITLE="$PROJECT_NAME"
-else
-    TITLE="Claude Code"
-fi
+# 标题与内容组装
+if [ -n "$PROJECT_NAME" ]; then TITLE="$PROJECT_NAME"; else TITLE="Claude Code"; fi
+if [ -n "$SESSION_NAME" ]; then TITLE="$TITLE ⚙ $SESSION_NAME"; fi
 
-# 内容（macOS 只有两行，副标题和内容合并）
 if [ "$EVENT" = "stop" ]; then
-    if [ -n "$CONTEXT" ]; then
-        BODY="✨ 搞定了: $CONTEXT"
-    else
-        BODY="✨ 搞定了~"
-    fi
+    [ -n "$CONTEXT" ] && BODY="✨ 搞定了: $CONTEXT" || BODY="✨ 搞定了~"
 else
-    if [ -n "$CONTEXT" ]; then
-        BODY="💬 需要你瞅一眼: $CONTEXT"
-    else
-        BODY="💬 需要你瞅一眼"
-    fi
+    [ -n "$CONTEXT" ] && BODY="💬 需要你瞅一眼: $CONTEXT" || BODY="💬 需要你瞅一眼"
 fi
 
-# mac 版副标题放在标题行：项目名 💎 会话名
-if [ -n "$SESSION_NAME" ]; then
-    TITLE="$TITLE ⚙ $SESSION_NAME"
-fi
-
-BODY_ESC=$(echo "$BODY" | sed 's/"/\\"/g' | tr '\n' ' ')
-TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g' | tr '\n' ' ')
-osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""
+# 使用环境变量传递给 osascript，彻底杜绝转义问题
+export CLAUDE_NOTIFY_TITLE="$TITLE"
+export CLAUDE_NOTIFY_BODY="$BODY"
+osascript -e 'display notification (system attribute "CLAUDE_NOTIFY_BODY") with title (system attribute "CLAUDE_NOTIFY_TITLE")' 2>/dev/null
+exit 0

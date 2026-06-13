@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Notify</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #1a1a2e;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+
+  .notification-card {
+    background-color: #16162a;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 24px 28px;
+    width: 400px;
+    color: #e0e0e0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 一级标题 */
+  .title-h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* 二级标题 */
+  .title-h2 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #9a9ab0;
+    margin-bottom: 16px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, #3a3a5a, #2a2a4a);
+    margin-bottom: 18px;
+  }
+
+  /* 内容文字 - 默认字号 */
+  .content {
+    font-size: 15px;
+    font-weight: 400;
+    color: #d0d0e0;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="notification-card">
+  <h1 class="title-h1">claude-code-notify</h1>
+  <h2 class="title-h2">后续待办清</h2>
+  <div class="divider"></div>
+  <p class="content">✨ 搞定了~</p>
+</div>
+
+</body>
+</html>
