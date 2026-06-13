@@ -88,7 +88,8 @@ $form.Add_Paint({
     # == 一级标题：项目名（大、粗、白 ==
     $projName = if ($ProjectName) { $ProjectName } else { "Claude Code" }
     $h1Font = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
-    $g.DrawString($projName, $h1Font, [System.Drawing.Brushes]::White, $x0, $y0)
+    $projBrush = New-Object System.Drawing.SolidBrush($t.titleColor)
+    $g.DrawString($projName, $h1Font, $projBrush, $x0, $y0)
 
     # == 二级标题：会话名（小、灰、淡 ==
     $sessY = $y0 + 34
@@ -121,7 +122,15 @@ $form.Add_Paint({
     $btnW = 80; $btnH = 28
     $btnRect = New-Object System.Drawing.Rectangle(($fw2 - $btnW - 16), ($fh2 - $btnH - 14), $btnW, $btnH)
     $ghostPen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(100,$t.ghostColor.R,$t.ghostColor.G,$t.ghostColor.B))
-    $g.DrawRectangle($ghostPen, $btnRect.X, $btnRect.Y, $btnRect.Width, $btnRect.Height)
+    # 圆角按钮路径
+    $btnRadius = 8
+    $btnPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $btnPath.AddArc($btnRect.X, $btnRect.Y, $btnRadius*2, $btnRadius*2, 180, 90)
+    $btnPath.AddArc($btnRect.Right - $btnRadius*2, $btnRect.Y, $btnRadius*2, $btnRadius*2, 270, 90)
+    $btnPath.AddArc($btnRect.Right - $btnRadius*2, $btnRect.Bottom - $btnRadius*2, $btnRadius*2, $btnRadius*2, 0, 90)
+    $btnPath.AddArc($btnRect.X, $btnRect.Bottom - $btnRadius*2, $btnRadius*2, $btnRadius*2, 90, 90)
+    $btnPath.CloseFigure()
+    $g.DrawPath($ghostPen, $btnPath)
     $gf = New-Object System.Drawing.StringFormat
     $gf.Alignment = 'Center'
     $gf.LineAlignment = 'Center'
