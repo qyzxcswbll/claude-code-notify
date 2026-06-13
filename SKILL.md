@@ -130,21 +130,27 @@ if (Test-Path $notifyModePath) {
     }
 }
 
+# XML 转义函数（防止用户输入含 <>& 导致 Toast 崩溃）
+function Escape-Xml([string]$text) {
+    if (-not $text) { return "" }
+    return [System.Security.SecurityElement]::Escape($text)
+}
+
 # 标题：项目名（第一行）
-$title = if ($projectName) { $projectName } else { "Claude Code" }
+$title = Escape-Xml $(if ($projectName) { $projectName } else { "Claude Code" })
 
 # 副标题：会话名（第二行，带图标）
-$subtitle = if ($sessionName) { "⚙ $sessionName" } else { "" }
+$subtitle = Escape-Xml $(if ($sessionName) { "⚙ $sessionName" } else { "" })
 
 # 内容：第三行
 $isStop = ($Event -eq 'stop')
 if ($isStop) {
-    $body = if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" }
+    $body = Escape-Xml $(if ($context) { "✨ 搞定了: $context" } else { "✨ 搞定了~" })
 } else {
-    $body = if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" }
+    $body = Escape-Xml $(if ($context) { "💬 需要你瞅一眼: $context" } else { "💬 需要你瞅一眼" })
 }
 
-# Windows Toast（三行层级）
+# Windows Toast
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
@@ -158,12 +164,10 @@ try {
     $xml.LoadXml($toastXml)
     $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-    exit 0
-} catch {}
-
-# msg 弹窗（兜底）
-try { msg * "Claude Code: $body" 2>$null } catch {}
-```
+} catch {
+    # 静默失败，绝不阻塞
+}
+exit 0
 
 #### macOS
 
@@ -243,13 +247,6 @@ with open(path, 'r', encoding='utf-8') as f:
 " 2>/dev/null)
 fi
 
-# 标题：项目名（第一行）
-if [ -n "$PROJECT_NAME" ]; then
-    TITLE="$PROJECT_NAME"
-else
-    TITLE="Claude Code"
-fi
-
 # 标题与内容组装
 if [ -n "$PROJECT_NAME" ]; then TITLE="$PROJECT_NAME"; else TITLE="Claude Code"; fi
 if [ -n "$SESSION_NAME" ]; then TITLE="$TITLE ⚙ $SESSION_NAME"; fi
@@ -263,7 +260,7 @@ fi
 # 使用环境变量传递给 osascript，彻底杜绝转义问题
 export CLAUDE_NOTIFY_TITLE="$TITLE"
 export CLAUDE_NOTIFY_BODY="$BODY"
-osascript -e "display notification \"$BODY_ESC\" with title \"$TITLE_ESC\""
+osascript -e 'display notification (system attribute "CLAUDE_NOTIFY_BODY") with title (system attribute "CLAUDE_NOTIFY_TITLE")' 2>/dev/null
 ```
 
 写完后执行 `chmod +x ~/.claude/notify`。
@@ -420,8 +417,11 @@ bash ~/.claude/notify-toggle.sh
 - **切回系统通知** — 切换为系统 Toast 模式
 
 ### 安装优雅弹窗脚本
-1. 从 `hooks/notify-elegant.ps1` 读取内容，写入 `~/.claude/notify-elegant.ps1`
-2. 从 `hooks/notify-config-server.py` 读取内容，写入 `~/.claude/notify-config-server.py`
+
+AI 执行以下操作：
+
+1. 创建 `~/.claude/notify-elegant.ps1`（参照项目 `hooks/notify-elegant.ps1` 的完整内容写入，UTF-8 BOM 编码）
+2. 创建 `~/.claude/notify-config-server.py`（参照项目 `hooks/notify-config-server.py` 的完整内容写入）
 3. 创建 `~/.claude/themes/` 目录
 
 ### 启动配置服务
