@@ -77,7 +77,8 @@ npx skills add qyzxcswbll/claude-code-notify -g
 
 
 ![系统弹窗](./img/toast-raw.png)
-![优雅弹窗](./img/toast-elegant.png)
+![优雅弹窗](./img/Snipaste_2026-06-13_14-11-46.png)
+![优雅弹窗](./img/Snipaste_2026-06-13_14-12-14.png)
 
 ## 功能对比
 
