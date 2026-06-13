@@ -15,6 +15,7 @@ $radius = 14
 $iconProj = "⚙"
 $iconDone = "✨"
 $iconWait = "⚙"
+$iconSession = "💬"
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Encoding UTF8 | ConvertFrom-Json
@@ -23,6 +24,7 @@ if (Test-Path $configPath) {
         if ($cfg.icons.project) { $iconProj = $cfg.icons.project }
         if ($cfg.icons.done) { $iconDone = $cfg.icons.done }
         if ($cfg.icons.wait) { $iconWait = $cfg.icons.wait }
+        if ($cfg.icons.session) { $iconSession = $cfg.icons.session }
     } catch {}
 }
 
@@ -85,18 +87,18 @@ $form.Add_Paint({
 
     $x0 = 114; $y0 = 20
 
-    # == 一级标题：项目名（大、粗、白 ==
+    # == 一级标题：项目名 ==
     $projName = if ($ProjectName) { $ProjectName } else { "Claude Code" }
     $h1Font = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
-    $projBrush = New-Object System.Drawing.SolidBrush($t.titleColor)
-    $g.DrawString($projName, $h1Font, $projBrush, $x0, $y0)
+    [System.Windows.Forms.TextRenderer]::DrawText($g, $projName, $h1Font,
+        [System.Drawing.Point]::new($x0, $y0), $t.titleColor)
 
-    # == 二级标题：会话名（小、灰、淡 ==
+    # == 二级标题：会话名 ==
     $sessY = $y0 + 34
     if ($SessionName) {
         $h2Font = New-Object System.Drawing.Font("Segoe UI", 10)
-        $metaBrush = New-Object System.Drawing.SolidBrush($t.metaColor)
-        $g.DrawString("$iconWait $SessionName", $h2Font, $metaBrush, $x0, $sessY)
+        [System.Windows.Forms.TextRenderer]::DrawText($g, "$iconSession $SessionName", $h2Font,
+            [System.Drawing.Point]::new($x0, $sessY), $t.metaColor)
     }
 
     # == 分割线 ==
@@ -104,17 +106,17 @@ $form.Add_Paint({
     $divPen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(60,$t.bd.R,$t.bd.G,$t.bd.B))
     $g.DrawLine($divPen, $x0, $divY, ($fw2-16), $divY)
 
-    # == 内容 ==（保持当前字号）
+    # == 内容 ==
     $bodyFont = New-Object System.Drawing.Font("Segoe UI", 11)
-    $bodyBrush = New-Object System.Drawing.SolidBrush($t.bodyColor)
     $isStop = ($Event -eq 'stop')
     if ($isStop) {
         $bodyText = if ($Context) { "$iconDone 搞定了：$Context" } else { "$iconDone 搞定了~" }
     } else {
         $bodyText = if ($Context) { "$iconWait $Context" } else { "$iconWait 需要你瞅一眼" }
     }
-    $g.DrawString($bodyText, $bodyFont, $bodyBrush,
-        [System.Drawing.RectangleF]::new($x0, ($divY + 10), ($fw2 - $x0 - 16), ($fh2 - ($divY + 10) - 50)))
+    $bodyRect = New-Object System.Drawing.Rectangle($x0, ($divY + 10), ($fw2 - $x0 - 16), ($fh2 - ($divY + 10) - 50))
+    $bodyFlags = [System.Windows.Forms.TextFormatFlags]::WordBreak -bor [System.Windows.Forms.TextFormatFlags]::EndEllipsis
+    [System.Windows.Forms.TextRenderer]::DrawText($g, $bodyText, $bodyFont, $bodyRect, $t.bodyColor, $bodyFlags)
 
     # == 关闭按钮（固定在右下角） ==
     $subFont = New-Object System.Drawing.Font("Segoe UI", 10)
@@ -131,11 +133,8 @@ $form.Add_Paint({
     $btnPath.AddArc($btnRect.X, $btnRect.Bottom - $btnRadius*2, $btnRadius*2, $btnRadius*2, 90, 90)
     $btnPath.CloseFigure()
     $g.DrawPath($ghostPen, $btnPath)
-    $gf = New-Object System.Drawing.StringFormat
-    $gf.Alignment = 'Center'
-    $gf.LineAlignment = 'Center'
-    $btnRectF = New-Object System.Drawing.RectangleF($btnRect.X, $btnRect.Y, $btnRect.Width, $btnRect.Height)
-    $g.DrawString("忽略", $subFont, $metaBrush, $btnRectF, $gf)
+    $btnFlags = [System.Windows.Forms.TextFormatFlags]::HorizontalCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter
+    [System.Windows.Forms.TextRenderer]::DrawText($g, "忽略", $subFont, $btnRect, $t.ghostColor, $btnFlags)
 })
 
 # ===== 渐入动画 =====
