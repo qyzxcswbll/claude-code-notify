@@ -3,6 +3,19 @@ param([string]$Event = 'stop')
 # 开关检测——存在 ~/.claude/.notifymute 文件就不弹窗
 if (Test-Path (Join-Path $env:USERPROFILE '.claude\.notifymute')) { exit 0 }
 
+# 模式检测——优雅弹窗分流
+$notifyModePath = Join-Path $env:USERPROFILE '.claude\notify-mode'
+if (Test-Path $notifyModePath) {
+    $mode = (Get-Content $notifyModePath -Encoding UTF8).Trim().ToLower()
+    if ($mode -eq "elegant") {
+        $elegantScript = Join-Path $env:USERPROFILE '.claude\notify-elegant.ps1'
+        if (Test-Path $elegantScript) {
+            & $elegantScript -Event $Event
+            exit 0
+        }
+    }
+}
+
 # 从 stdin 原始文本中提取 transcript_path
 $transcriptPath = ""
 try {
@@ -67,7 +80,7 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
 $title = if ($projectName) { $projectName } else { "Claude Code" }
 
 # 副标题：会话名（第二行，层级感）
-$subtitle = if ($sessionName) { "💎 $sessionName" } else { "" }
+$subtitle = if ($sessionName) { "⚙️ $sessionName" } else { "" }
 
 # 内容：第三行
 $isStop = ($Event -eq 'stop')
