@@ -96,7 +96,7 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
     } catch {}
 
     try {
-        # 从 transcript 尾部提取最后一条用户消息
+        # 从 transcript 尾部提取最后一条用户消息（跳过 tool_result 找有文字的那条）
         $tailLines = Get-Content $transcriptPath -Encoding UTF8 -Tail 100
         for ($i = $tailLines.Length - 1; $i -ge 0; $i--) {
             if ($tailLines[$i] -match '"role"\s*:\s*"user"') {
@@ -109,19 +109,32 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
                     if ($content) {
                         $context = ($content -replace "`n", " ").Trim()
                         if ($context.Length -gt 60) { $context = $context.Substring(0, 57) + "..." }
+                        break
                     }
                 } catch {}
-                break
             }
         }
     } catch {}
+}
+
+# 模式检测——优雅弹窗分流
+$notifyModePath = Join-Path $env:USERPROFILE '.claude\notify-mode'
+if (Test-Path $notifyModePath) {
+    $mode = (Get-Content $notifyModePath -Encoding UTF8).Trim().ToLower()
+    if ($mode -eq "elegant") {
+        $elegantScript = Join-Path $env:USERPROFILE '.claude\notify-elegant.ps1'
+        if (Test-Path $elegantScript) {
+            & $elegantScript -Event $Event -ProjectName $projectName -SessionName $sessionName -Context $context
+            exit 0
+        }
+    }
 }
 
 # 标题：项目名（第一行）
 $title = if ($projectName) { $projectName } else { "Claude Code" }
 
 # 副标题：会话名（第二行，带图标）
-$subtitle = if ($sessionName) { "⚙️ $sessionName" } else { "" }
+$subtitle = if ($sessionName) { "⚙ $sessionName" } else { "" }
 
 # 内容：第三行
 $isStop = ($Event -eq 'stop')
@@ -238,7 +251,7 @@ fi
 
 # 副标题：会话名附加到标题行（macOS 只有两行）
 if [ -n "$SESSION_NAME" ]; then
-    TITLE="$TITLE ⚙️ $SESSION_NAME"
+    TITLE="$TITLE ⚙ $SESSION_NAME"
 fi
 
 if [ "$EVENT" = "stop" ]; then
