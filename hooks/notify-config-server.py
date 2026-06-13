@@ -100,7 +100,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"✨ Claude Notify 配置服务已启动")
-    print(f"   http://localhost:{PORT}")
-    print(f"   按 Ctrl+C 停止服务")
+    print(f"Config server running on http://localhost:{PORT}")
+    print(f"Press Ctrl+C to stop")
     HTTPServer(("", PORT), Handler).serve_forever()
