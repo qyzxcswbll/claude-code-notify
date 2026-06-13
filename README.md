@@ -9,7 +9,10 @@
 
 ## 效果展示
 
-![系统弹窗](img/toast-raw.png) | ![优雅弹窗](img/toast-elegant.png)
+<p align="center">
+  <img src="img/toast-raw.png" width="45%" alt="系统弹窗">
+  <img src="img/toast-elegant.png" width="45%" alt="优雅弹窗">
+</p>
 
 ## Feature
 
