@@ -27,12 +27,12 @@
 
   /* 优雅弹窗卡片 */
   .toast-card {
-    width: 380px; height: 220px; border-radius: 14px; overflow: hidden; display: flex;
+    width: 380px; border-radius: 14px; overflow: hidden; display: flex;
     box-shadow: 0 8px 40px rgba(0,0,0,0.6);
     animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1);
   }
   .char-strip {
-    width: 100px; min-height: 220px; flex-shrink: 0;
+    width: 100px; flex-shrink: 0;
     position: relative; overflow: hidden;
     display: flex; align-items: flex-end; justify-content: center;
   }
@@ -55,8 +55,8 @@
   .card-divider { height: 1px; margin: 6px 0 10px; background: rgba(139,92,246,0.2); }
   .card-body { flex: 1; font-size: 13px; line-height: 1.6; color: #e8e0f8; display: flex; flex-direction: column; overflow: hidden; }
   .card-body .main-text { font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .card-footer { display: flex; justify-content: flex-end; margin-top: 16px; margin-bottom: 4px; }
-  .card-footer .btn { padding: 8px 26px; border-radius: 9px; border: 1.5px solid #a78bfa; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: #a78bfa; }
+  .card-footer { display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; margin-bottom: 4px; }
+  .card-footer .btn { padding: 6px 24px; border-radius: 9px; border: 1.5px solid #a78bfa; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: #a78bfa; white-space: nowrap; }
 
   .sys-toast {
     width: 360px; background: #1e1e2e; border: 1px solid #45475a;
@@ -242,6 +242,7 @@
       <div class="label-sm" style="margin-top:8px;">参数</div>
       <div class="param-row">
         <label>圆角</label><input type="range" min="4" max="28" value="14" id="er"><span class="val" id="erV">14</span>
+        <label>高度</label><input type="range" min="180" max="350" value="220" id="eh"><span class="val" id="ehV">220</span>
         <label>停留</label><input type="range" min="2" max="15" value="5" id="ed"><span class="val" id="edV">5s</span>
       </div>
     </div>
@@ -376,7 +377,7 @@ function removeUpload(){
 }
 
 function saveConfig(){
-  const cfg={mode,theme,icons:mode==='sys'?{project:si.p,status:si.s}:{project:ei.p,done:ei.d,wait:ei.w},params:{radius:g('er').value,duration:g('ed').value},hasImage:!!uploaded};
+  const cfg={mode,theme,icons:mode==='sys'?{project:si.p,status:si.s}:{project:ei.p,done:ei.d,wait:ei.w},params:{radius:g('er').value,duration:g('ed').value,height:g('eh').value},hasImage:!!uploaded};
   if(uploaded){cfg.imageData=uploaded.data;}
   const h=g('saveHint');
   h.textContent='⏳ 保存中...';h.style.color='#fbbf24';
@@ -392,6 +393,7 @@ function saveConfig(){
 }
 
 g('er').oninput=()=>{const v=g('er').value;g('erV').textContent=v;g('elegantToast').style.borderRadius=v+'px';};
+g('eh').oninput=()=>{const v=g('eh').value;g('ehV').textContent=v;g('elegantToast').style.height=v+'px';g('charStrip').style.height=v+'px';};
 g('ed').oninput=()=>{g('edV').textContent=g('ed').value+'s';};
 
 buildGrid('iconGrid1',TP,si.p,x=>{si.p=x;g('sysIcon1').textContent=x;});
@@ -400,6 +402,7 @@ buildGrid('elegantIconGrid1',TP,ei.p,x=>{ei.p=x;updE();});
 buildGrid('elegantIconGrid2',TS,ei.d,x=>{ei.d=x;updE();});
 buildGrid('elegantIconGrid3',TW,ei.w,x=>{ei.w=x;updE();});
 buildTheme();updE();
+g('elegantToast').style.height='220px';g('charStrip').style.height='220px';
 </script>
 </body>
 </html>

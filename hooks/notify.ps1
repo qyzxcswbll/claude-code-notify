@@ -55,9 +55,9 @@ if ($transcriptPath -and (Test-Path $transcriptPath)) {
                     if ($content) {
                         $context = ($content -replace "`n", " ").Trim()
                         if ($context.Length -gt 60) { $context = $context.Substring(0, 57) + "..." }
+                        break
                     }
                 } catch {}
-                break
             }
         }
     } catch {}
