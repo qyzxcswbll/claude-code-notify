@@ -12,6 +12,8 @@
 <p align="center">
   <img src="img/toast-raw.png" width="45%" alt="系统弹窗">
   <img src="img/toast-elegant.png" width="45%" alt="优雅弹窗">
+    <img src="img/Snipaste_2026-06-13_14-11-46.png" width="45%" alt="优雅弹窗">
+      <img src="img/Snipaste_2026-06-13_14-12-14.png" width="45%" alt="优雅弹窗">
 </p>
 
 ## Feature
@@ -74,12 +76,6 @@ npx skills add qyzxcswbll/claude-code-notify -g
   ```bash
   bash ~/.claude/notify-toggle.sh
   ```
-
-
-![系统弹窗](./img/toast-raw.png)
-![优雅弹窗](./img/Snipaste_2026-06-13_14-11-46.png)
-![优雅弹窗](./img/Snipaste_2026-06-13_14-12-14.png)
-
 ## 功能对比
 
 | 特性 | 系统弹窗 (V1) | 优雅弹窗 (V2) |
