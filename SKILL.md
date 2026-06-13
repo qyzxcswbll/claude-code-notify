@@ -445,10 +445,12 @@ AI 必须严格按以下步骤执行：
 3. **创建主题目录**：执行 `mkdir -p ~/.claude/themes` 创建目录（如果不存在）。
 
 ### 启动配置服务
-用户说「定制弹窗」时：
-1. 启动配置服务：`python3 ~/.claude/notify-config-server.py &`
-2. 在浏览器打开 `docs/design-v2-preview.html`
-3. 告知用户在网页上选择主题、图标、上传立绘后点保存
+用户说「定制弹窗」时，AI 执行以下逻辑：
+
+1. **检测服务是否已运行**：执行 `python3 -c "import socket; s=socket.socket(); s.settimeout(2); print(0 if s.connect_ex(('localhost',18765))==0 else 1)"`。如果返回 0 表示服务已在运行，跳过启动步骤。
+2. **如果服务未运行**：执行 `python3 ~/.claude/notify-config-server.py &` 在后台启动配置服务。
+3. **打开浏览器**：在浏览器打开 `docs/design-v2-preview.html`。
+4. 告知用户在网页上选择主题、图标、上传立绘后点保存。
 
 ### 注意事项
 - 模式标记存储在 `~/.claude/notify-mode`（内容为 `raw` 或 `elegant`）
