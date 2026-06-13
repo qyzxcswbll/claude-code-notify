@@ -7,6 +7,10 @@
 
 > 离开 Claude Code 去做其他事，任务完成时自动弹窗通知你，不用一直盯着终端。
 
+## 效果展示
+
+![系统弹窗](img/toast-raw.png) | ![优雅弹窗](img/toast-elegant.png)
+
 ## Feature
 
 - 🔔 **桌面通知** — 任务完成或需要你回应时，系统原生弹窗，不打断操作
@@ -51,9 +55,6 @@ npx skills add qyzxcswbll/claude-code-notify -g
 4. 选择主题、自定义图标、上传立绘
 5. 调整弹窗高度、圆角、停留时长
 6. 点击「保存」立即生效
-
-![系统弹窗](img/toast-raw.png)
-![优雅弹窗](img/toast-elegant.png)
 
 ## 开关通知
 
