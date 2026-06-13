@@ -280,16 +280,27 @@ if (Test-Path $flagPath) {
     New-Item $flagPath -ItemType File -Force | Out-Null
     $body = "通知已关闭 🔕"
 }
+
+# XML 转义函数
+function Escape-Xml([string]$text) {
+    if (-not $text) { return "" }
+    return [System.Security.SecurityElement]::Escape($text)
+}
+
+$bodyEscaped = Escape-Xml $body
+
 try {
     Add-Type -AssemblyName System.Runtime.WindowsRuntime
     $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
     $null = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
     $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-    $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText02""><text id=""1"">Claude Code 通知</text><text id=""2"">$body</text></binding></visual></toast>"
+    $toastXml = "<?xml version=""1.0"" encoding=""utf-8""?><toast><visual><binding template=""ToastText02""><text id=""1"">Claude Code 通知</text><text id=""2"">$bodyEscaped</text></binding></visual></toast>"
     $xml.LoadXml($toastXml)
     $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-} catch { msg * "Claude Code 通知: $body" }
+} catch {
+    # 静默失败，不弹窗也不阻塞
+}
 ```
 
 写入 `~/.claude/notify-toggle.bat`（纯 ASCII）：
@@ -306,9 +317,17 @@ powershell -ExecutionPolicy Bypass -File "%USERPROFILE%\.claude\notify-toggle.ps
 ```bash
 #!/bin/bash
 FLAG="$HOME/.claude/.notifymute"
-if [ -f "$FLAG" ]; then rm "$FLAG"; BODY="通知已开启 🔔"
-else touch "$FLAG"; BODY="通知已关闭 🔕"; fi
-osascript -e "display notification \"$BODY\" with title \"Claude Code 通知\""
+if [ -f "$FLAG" ]; then
+    rm "$FLAG"
+    BODY="通知已开启 🔔"
+else
+    touch "$FLAG"
+    BODY="通知已关闭 🔕"
+fi
+
+# 使用环境变量传递，杜绝转义问题
+export CLAUDE_TOGGLE_BODY="$BODY"
+osascript -e 'display notification (system attribute "CLAUDE_TOGGLE_BODY") with title "Claude Code 通知"'
 ```
 
 ### 3. 配置 hooks
@@ -419,11 +438,11 @@ bash ~/.claude/notify-toggle.sh
 
 ### 安装优雅弹窗脚本
 
-AI 执行以下操作：
+AI 必须严格按以下步骤执行：
 
-1. 创建 `~/.claude/notify-elegant.ps1`（参照项目 `hooks/notify-elegant.ps1` 的完整内容写入，UTF-8 BOM 编码）
-2. 创建 `~/.claude/notify-config-server.py`（参照项目 `hooks/notify-config-server.py` 的完整内容写入）
-3. 创建 `~/.claude/themes/` 目录
+1. **读取并写入优雅弹窗脚本**：使用 `Read` 工具读取当前项目下的 `hooks/notify-elegant.ps1` 文件内容，然后使用 `Write` 工具将其完整写入到 `~/.claude/notify-elegant.ps1`（必须确保使用 UTF-8 BOM 编码）。
+2. **读取并写入配置服务脚本**：使用 `Read` 工具读取当前项目下的 `hooks/notify-config-server.py` 文件内容，然后使用 `Write` 工具将其完整写入到 `~/.claude/notify-config-server.py`。
+3. **创建主题目录**：执行 `mkdir -p ~/.claude/themes` 创建目录（如果不存在）。
 
 ### 启动配置服务
 用户说「定制弹窗」时：

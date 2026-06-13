@@ -1,0 +1,484 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{padding:1.5rem;font-family:var(--font-sans);}
+.preview-scene{
+  width:100%;min-height:360px;
+  background:linear-gradient(160deg,#0e0720 0%,#160d35 40%,#0a1a2e 100%);
+  border-radius:16px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.stars{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d) ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:0.1;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+.scanline{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:1;}
+.popup-s6{
+  width:330px;background:rgba(8,4,20,0.93);border-radius:12px;
+  border:1px solid rgba(255,120,200,0.35);overflow:hidden;
+  position:absolute;animation:waifu-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;z-index:10;
+}
+@keyframes waifu-pop{0%{transform:scale(0.4) rotate(-6deg) translateY(40px);opacity:0;}60%{transform:scale(1.06) rotate(1deg);}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+.s6-header{display:flex;align-items:stretch;border-bottom:1px solid rgba(255,120,200,0.2);position:relative;overflow:hidden;}
+.s6-side-art{width:96px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:center;padding-top:0;position:relative;overflow:hidden;}
+.s6-side-art::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,120,200,0.03) 0px,rgba(255,120,200,0.03) 1px,transparent 1px,transparent 8px);}
+.char-svg{width:96px;height:110px;display:block;position:relative;z-index:1;animation:charFloat 3s ease-in-out infinite;}
+@keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.s6-header-info{flex:1;padding:10px 10px 10px 12px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+.s6-app-name{font-size:10px;color:rgba(255,160,220,0.7);letter-spacing:1.5px;}
+.s6-char-name{font-size:15px;color:#ffe0f4;font-weight:600;display:flex;align-items:center;gap:6px;}
+.s6-online-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(255,110,180,0.6);}50%{box-shadow:0 0 0 5px rgba(255,110,180,0);}}
+.s6-char-role{font-size:11px;color:rgba(200,150,255,0.8);}
+.s6-close{position:absolute;top:8px;right:10px;color:rgba(255,160,220,0.5);font-size:18px;cursor:pointer;line-height:1;}
+.s6-body{padding:10px 14px 6px;}
+.bubble-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:8px;}
+.bubble-row.right{flex-direction:row-reverse;}
+.mini-avatar{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;border:1.5px solid rgba(255,120,200,0.4);}
+.mini-avatar.char{background:linear-gradient(135deg,#4a1060,#1a0a40);}
+.mini-avatar.user{background:linear-gradient(135deg,#0a2a4a,#082040);color:#93c5fd;}
+.msg-bubble{max-width:195px;padding:7px 10px;border-radius:12px;font-size:12px;line-height:1.5;animation:msgIn 0.3s ease both;}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.msg-bubble.char{background:rgba(80,20,120,0.7);border:1px solid rgba(255,120,200,0.25);color:#f0d0ff;border-radius:2px 12px 12px 12px;}
+.msg-bubble.system{background:rgba(0,0,0,0.4);border:1px solid rgba(255,200,100,0.2);color:#ffe8a0;border-radius:8px;font-size:11px;text-align:center;margin:0 auto 8px;padding:4px 12px;display:block;width:100%;}
+.typing-dots{display:flex;gap:4px;padding:6px 14px;align-items:center;}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,120,200,0.7);animation:typeDot 1.2s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:0.2s;}.dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typeDot{0%,80%,100%{transform:translateY(0);opacity:0.4;}40%{transform:translateY(-4px);opacity:1;}}
+.s6-stats{display:flex;gap:6px;padding:0 14px 8px;}
+.stat-chip{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,120,200,0.15);border-radius:8px;padding:5px 6px;text-align:center;}
+.stat-chip .num{font-size:15px;font-weight:700;}.stat-chip .lbl{font-size:10px;color:rgba(200,150,255,0.6);margin-top:1px;}
+.s6-affection{padding:0 14px 10px;display:flex;align-items:center;gap:8px;}
+.aff-label{font-size:10px;color:rgba(255,160,220,0.6);white-space:nowrap;}
+.aff-track{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.aff-fill{height:100%;background:linear-gradient(90deg,#c026d3,#ff6eb4,#fbbf24);border-radius:4px;transition:width 1.6s ease-out;}
+.aff-hearts{font-size:12px;color:#ff6eb4;animation:heartbeat 1s ease-in-out infinite;}
+@keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.25);}}
+.s6-footer{padding:8px 14px 12px;border-top:1px solid rgba(255,120,200,0.12);display:flex;gap:8px;}
+.s6-btn{flex:1;padding:8px 0;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.s6-btn.ign{background:rgba(255,255,255,0.06);border:1px solid rgba(255,120,200,0.2);color:rgba(255,160,220,0.7);}
+.s6-btn.main{color:white;}
+.s6-btn.main:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.controls-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.ctrl-btn{padding:7px 14px;border-radius:20px;border:1.5px solid rgba(255,120,200,0.3);background:rgba(255,120,200,0.08);color:rgba(255,200,240,0.9);font-size:12px;cursor:pointer;transition:all 0.2s;}
+.ctrl-btn:hover{background:rgba(255,120,200,0.18);}
+.ctrl-btn.active{background:rgba(255,110,180,0.25);border-color:#ff6eb4;color:#ff9de2;font-weight:600;}
+.pos-row{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+.pos-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);font-size:12px;cursor:pointer;}
+.pos-btn:hover{background:var(--color-background-secondary);}
+.slabel{font-size:12px;color:var(--color-text-secondary);font-weight:500;margin-bottom:6px;}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">宅男风格二次元弹窗-手绘立绘版</h2>
+<div class="preview-scene" id="scene">
+  <div class="stars" id="stars"></div>
+  <div class="scanline"></div>
+  <div id="popup-wrap"></div>
+</div>
+<div class="controls-row">
+  <span class="slabel">切换角色：</span>
+  <button class="ctrl-btn active" onclick="setChar(0,this)">🌸 绫华</button>
+  <button class="ctrl-btn" onclick="setChar(1,this)">⚡ 将军</button>
+  <button class="ctrl-btn" onclick="setChar(2,this)">🔥 诺艾尔</button>
+  <button class="ctrl-btn" onclick="setChar(3,this)">🌙 甘雨</button>
+  <button class="ctrl-btn" onclick="replayAnim()">↺ 重播</button>
+</div>
+<div class="pos-row">
+  <button class="pos-btn" onclick="setPos('center')">居中</button>
+  <button class="pos-btn" onclick="setPos('top-right')">右上</button>
+  <button class="pos-btn" onclick="setPos('bottom-right')">右下</button>
+  <button class="pos-btn" onclick="setPos('bottom-left')">左下</button>
+</div>
+</div>
+
+<script>
+function makeSVG_Ayaka(){
+  return `<svg class="char-svg" viewBox="0 0 96 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow-a" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c0a0ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#c0a0ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="60" rx="30" ry="55" fill="url(#glow-a)"/>
+  <!-- body / kimono -->
+  <path d="M22 75 Q30 65 48 63 Q66 65 74 75 L78 110 L18 110 Z" fill="#c0d8f8"/>
+  <path d="M38 70 L48 63 L58 70 L55 110 L41 110 Z" fill="#e8f4ff"/>
+  <!-- kimono accent lines -->
+  <path d="M38 70 Q45 80 48 110" stroke="#a0b8e0" stroke-width="0.8" fill="none"/>
+  <path d="M58 70 Q51 80 48 110" stroke="#a0b8e0" stroke-width="0.8" fill="none"/>
+  <!-- collar -->
+  <path d="M42 70 L48 63 L54 70" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- sash -->
+  <rect x="30" y="82" width="36" height="7" rx="2" fill="#8ab4e8"/>
+  <!-- neck -->
+  <rect x="44" y="57" width="8" height="8" rx="3" fill="#fde8d8"/>
+  <!-- head -->
+  <ellipse cx="48" cy="44" rx="17" ry="18" fill="#fde8d8"/>
+  <!-- hair back -->
+  <path d="M31 38 Q28 20 33 14 Q38 8 48 7 Q58 8 63 14 Q68 20 65 38" fill="#1a3a6e"/>
+  <!-- hair top / crown -->
+  <path d="M33 32 Q36 18 48 15 Q60 18 63 32 Q58 28 48 27 Q38 28 33 32 Z" fill="#1a3a6e"/>
+  <!-- ahoge -->
+  <path d="M48 15 Q52 8 55 4 Q57 1 54 5 Q56 3 52 8" stroke="#2a4a8e" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- side hair -->
+  <path d="M31 38 Q26 50 28 65 Q30 60 32 55 Q30 48 31 38" fill="#1a3a6e"/>
+  <path d="M65 38 Q70 50 68 65 Q66 60 64 55 Q66 48 65 38" fill="#1a3a6e"/>
+  <!-- hair ornament -->
+  <circle cx="38" cy="30" r="3" fill="#e0c8ff" stroke="#a090ff" stroke-width="0.8"/>
+  <path d="M38 27 L40 23 L38 27" stroke="#a090ff" stroke-width="1" fill="none"/>
+  <!-- eyes -->
+  <ellipse cx="41" cy="44" rx="4.5" ry="4" fill="#e8f0ff"/>
+  <ellipse cx="41" cy="44" rx="3.2" ry="3" fill="#4a70c8"/>
+  <ellipse cx="41" cy="44" rx="1.8" ry="1.8" fill="#1a2a60"/>
+  <ellipse cx="42.2" cy="43" rx="0.9" ry="0.8" fill="white" opacity="0.9"/>
+  <path d="M37 41 Q41 39.5 45 41" stroke="#1a3a6e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="55" cy="44" rx="4.5" ry="4" fill="#e8f0ff"/>
+  <ellipse cx="55" cy="44" rx="3.2" ry="3" fill="#4a70c8"/>
+  <ellipse cx="55" cy="44" rx="1.8" ry="1.8" fill="#1a2a60"/>
+  <ellipse cx="56.2" cy="43" rx="0.9" ry="0.8" fill="white" opacity="0.9"/>
+  <path d="M51 41 Q55 39.5 59 41" stroke="#1a3a6e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- eyelashes -->
+  <path d="M37 41.5 Q35.5 40 36 39" stroke="#1a3a6e" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M51 41.5 Q49.5 40 50 39" stroke="#1a3a6e" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M47 49 Q48 50.5 49 49" stroke="#e8a898" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+  <!-- mouth -->
+  <path d="M44.5 52.5 Q48 55 51.5 52.5" stroke="#e88898" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="37" cy="49" rx="4" ry="2" fill="#ffb0b0" opacity="0.35"/>
+  <ellipse cx="59" cy="49" rx="4" ry="2" fill="#ffb0b0" opacity="0.35"/>
+</svg>`;
+}
+
+function makeSVG_Raiden(){
+  return `<svg class="char-svg" viewBox="0 0 96 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow-r" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a080ff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#a080ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="60" rx="30" ry="55" fill="url(#glow-r)"/>
+  <!-- armor body -->
+  <path d="M20 72 Q30 60 48 58 Q66 60 76 72 L80 110 L16 110 Z" fill="#2a1e4a"/>
+  <path d="M36 66 L48 58 L60 66 L57 110 L39 110 Z" fill="#3d2d6a"/>
+  <!-- armor details -->
+  <path d="M36 66 L48 58 L60 66" stroke="#9060ff" stroke-width="1.5" fill="none"/>
+  <rect x="42" y="70" width="12" height="4" rx="2" fill="#7040d0"/>
+  <path d="M24 78 L34 70" stroke="#9060ff" stroke-width="1" fill="none"/>
+  <path d="M72 78 L62 70" stroke="#9060ff" stroke-width="1" fill="none"/>
+  <!-- pauldrons -->
+  <path d="M18 72 Q22 60 30 62 L28 72 Z" fill="#3d2d6a" stroke="#6040b0" stroke-width="0.8"/>
+  <path d="M78 72 Q74 60 66 62 L68 72 Z" fill="#3d2d6a" stroke="#6040b0" stroke-width="0.8"/>
+  <!-- neck -->
+  <rect x="44" y="53" width="8" height="7" rx="3" fill="#fde8d8"/>
+  <!-- head -->
+  <ellipse cx="48" cy="40" rx="17" ry="18" fill="#fde8d8"/>
+  <!-- long hair back -->
+  <path d="M31 34 Q20 55 22 90 Q28 70 30 55 Q28 44 31 34" fill="#2a1640"/>
+  <path d="M65 34 Q76 55 74 90 Q68 70 66 55 Q68 44 65 34" fill="#2a1640"/>
+  <!-- hair top -->
+  <path d="M31 30 Q34 14 48 12 Q62 14 65 30 Q58 24 48 23 Q38 24 31 30 Z" fill="#2a1640"/>
+  <!-- elegant side pieces -->
+  <path d="M31 34 Q27 42 30 55 Q32 48 32 42 Q32 38 31 34" fill="#3a2050"/>
+  <path d="M65 34 Q69 42 66 55 Q64 48 64 42 Q64 38 65 34" fill="#3a2050"/>
+  <!-- hair ornament - shogun eye -->
+  <ellipse cx="48" cy="22" rx="6" ry="4" fill="#1a0a30" stroke="#8060d0" stroke-width="1"/>
+  <ellipse cx="48" cy="22" rx="3" ry="2" fill="#6040b0"/>
+  <path d="M42 22 L54 22" stroke="#8060d0" stroke-width="0.5" fill="none"/>
+  <!-- eyes - sharp determined -->
+  <ellipse cx="41" cy="40" rx="4.5" ry="3.5" fill="#f0e8ff"/>
+  <ellipse cx="41" cy="40" rx="3" ry="2.8" fill="#7040c0"/>
+  <ellipse cx="41" cy="40" rx="1.5" ry="1.5" fill="#1a0a30"/>
+  <ellipse cx="42" cy="39" rx="0.8" ry="0.7" fill="white" opacity="0.9"/>
+  <!-- sharp eyeliner -->
+  <path d="M36.5 38 L41 37 L45.5 38.5" stroke="#1a0a30" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M45.5 38.5 L47 37.5" stroke="#1a0a30" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="55" cy="40" rx="4.5" ry="3.5" fill="#f0e8ff"/>
+  <ellipse cx="55" cy="40" rx="3" ry="2.8" fill="#7040c0"/>
+  <ellipse cx="55" cy="40" rx="1.5" ry="1.5" fill="#1a0a30"/>
+  <ellipse cx="56" cy="39" rx="0.8" ry="0.7" fill="white" opacity="0.9"/>
+  <path d="M50.5 38 L55 37 L59.5 38.5" stroke="#1a0a30" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M59.5 38.5 L61 37.5" stroke="#1a0a30" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M47 44.5 Q48 46 49 44.5" stroke="#e8a898" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+  <!-- mouth - slight frown/neutral -->
+  <path d="M44.5 48 Q48 49.5 51.5 48" stroke="#e88898" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- lightning mark on forehead -->
+  <path d="M48 26 L46 29 L49 29 L47 33" stroke="#c080ff" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+}
+
+function makeSVG_Noelle(){
+  return `<svg class="char-svg" viewBox="0 0 96 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow-n" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffb080" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffb080" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="62" rx="32" ry="52" fill="url(#glow-n)"/>
+  <!-- armored skirt -->
+  <path d="M16 78 Q28 64 48 62 Q68 64 80 78 L84 110 L12 110 Z" fill="#c8d8e8"/>
+  <path d="M16 78 Q20 72 26 70 L24 78 Z" fill="#b0c0d0"/>
+  <path d="M80 78 Q76 72 70 70 L72 78 Z" fill="#b0c0d0"/>
+  <!-- center plate -->
+  <path d="M38 68 L48 62 L58 68 L56 84 L40 84 Z" fill="#d8e8f8" stroke="#a0b8d0" stroke-width="0.8"/>
+  <!-- rose emblem -->
+  <circle cx="48" cy="74" r="5" fill="#e8a0b0" stroke="#c87090" stroke-width="0.8"/>
+  <circle cx="48" cy="74" r="2.5" fill="#c87090"/>
+  <!-- neck -->
+  <rect x="44" y="56" width="8" height="8" rx="3" fill="#fde8d8"/>
+  <!-- head - slightly rounder / younger -->
+  <ellipse cx="48" cy="42" rx="18" ry="19" fill="#fde8d8"/>
+  <!-- hair back blonde -->
+  <path d="M30 36 Q18 60 20 95 Q26 72 28 58 Q26 46 30 36" fill="#d4a840"/>
+  <path d="M66 36 Q78 60 76 95 Q70 72 68 58 Q70 46 66 36" fill="#d4a840"/>
+  <!-- hair top -->
+  <path d="M30 32 Q34 14 48 11 Q62 14 66 32 Q60 25 48 24 Q36 25 30 32 Z" fill="#d4a840"/>
+  <!-- voluminous side hair -->
+  <path d="M30 36 Q22 52 24 70 Q28 56 30 48 Q30 42 30 36" fill="#c89830"/>
+  <path d="M66 36 Q74 52 72 70 Q68 56 66 48 Q66 42 66 36" fill="#c89830"/>
+  <!-- twin drill lower -->
+  <path d="M24 70 Q18 80 22 92 Q26 82 24 70" fill="#c89830"/>
+  <path d="M72 70 Q78 80 74 92 Q70 82 72 70" fill="#c89830"/>
+  <!-- maid headband -->
+  <rect x="30" y="26" width="36" height="6" rx="3" fill="white" stroke="#c0c8d0" stroke-width="0.5"/>
+  <!-- eyes - big genki -->
+  <ellipse cx="40.5" cy="42" rx="5" ry="4.5" fill="#e8f4ff"/>
+  <ellipse cx="40.5" cy="42" rx="3.5" ry="3.5" fill="#5888d0"/>
+  <ellipse cx="40.5" cy="42" rx="2" ry="2" fill="#1a3060"/>
+  <ellipse cx="41.8" cy="40.5" rx="1.1" ry="1" fill="white" opacity="0.9"/>
+  <ellipse cx="40" cy="43.5" rx="0.6" ry="0.5" fill="white" opacity="0.5"/>
+  <path d="M35.5 38.5 Q40.5 37 45.5 38.5" stroke="#1a3060" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <ellipse cx="55.5" cy="42" rx="5" ry="4.5" fill="#e8f4ff"/>
+  <ellipse cx="55.5" cy="42" rx="3.5" ry="3.5" fill="#5888d0"/>
+  <ellipse cx="55.5" cy="42" rx="2" ry="2" fill="#1a3060"/>
+  <ellipse cx="56.8" cy="40.5" rx="1.1" ry="1" fill="white" opacity="0.9"/>
+  <ellipse cx="55" cy="43.5" rx="0.6" ry="0.5" fill="white" opacity="0.5"/>
+  <path d="M50.5 38.5 Q55.5 37 60.5 38.5" stroke="#1a3060" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M47 47.5 Q48 49 49 47.5" stroke="#e8a898" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+  <!-- big smile -->
+  <path d="M43.5 52 Q48 55.5 52.5 52" stroke="#e87878" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+  <!-- blush heavy -->
+  <ellipse cx="36" cy="47" rx="5" ry="2.5" fill="#ffb0b0" opacity="0.5"/>
+  <ellipse cx="60" cy="47" rx="5" ry="2.5" fill="#ffb0b0" opacity="0.5"/>
+</svg>`;
+}
+
+function makeSVG_Ganyu(){
+  return `<svg class="char-svg" viewBox="0 0 96 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow-g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#80c8ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#80c8ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="60" rx="30" ry="55" fill="url(#glow-g)"/>
+  <!-- qipao style body -->
+  <path d="M22 74 Q32 62 48 60 Q64 62 74 74 L76 110 L20 110 Z" fill="#4a8acc"/>
+  <path d="M36 67 L48 60 L60 67 L58 110 L38 110 Z" fill="#6aaae8"/>
+  <!-- qipao pattern lines -->
+  <path d="M36 67 L48 60 L60 67" stroke="#a0d0ff" stroke-width="0.8" fill="none"/>
+  <path d="M30 80 Q35 76 40 78" stroke="#a0d0ff" stroke-width="0.7" fill="none"/>
+  <path d="M66 80 Q61 76 56 78" stroke="#a0d0ff" stroke-width="0.7" fill="none"/>
+  <!-- adeptal gem chest -->
+  <ellipse cx="48" cy="74" rx="5" ry="4" fill="#c0e8ff" stroke="#60a8e0" stroke-width="0.8"/>
+  <ellipse cx="48" cy="74" rx="2.5" ry="2" fill="#1a6aaa"/>
+  <!-- horn base effect -->
+  <path d="M22 74 Q18 65 20 56 L26 62 Z" fill="#3a7abc" opacity="0.6"/>
+  <!-- neck -->
+  <rect x="44" y="55" width="8" height="7" rx="3" fill="#fde8d8"/>
+  <!-- head -->
+  <ellipse cx="48" cy="42" rx="17" ry="18" fill="#fde8d8"/>
+  <!-- hair back - blue-purple -->
+  <path d="M31 36 Q22 56 24 88 Q30 68 30 54 Q28 44 31 36" fill="#4060c8"/>
+  <path d="M65 36 Q74 56 72 88 Q66 68 66 54 Q68 44 65 36" fill="#4060c8"/>
+  <!-- hair top -->
+  <path d="M31 32 Q35 14 48 12 Q61 14 65 32 Q59 25 48 24 Q37 25 31 32 Z" fill="#4060c8"/>
+  <!-- hair highlight -->
+  <path d="M38 16 Q44 13 52 15 Q46 14 42 17 Z" fill="#7090e8" opacity="0.7"/>
+  <!-- adeptal horns -->
+  <path d="M38 20 Q34 10 30 3 Q34 8 36 14 Q37 18 38 20" fill="#a0c8f0" stroke="#70a0d0" stroke-width="0.5"/>
+  <path d="M58 20 Q62 10 66 3 Q62 8 60 14 Q59 18 58 20" fill="#a0c8f0" stroke="#70a0d0" stroke-width="0.5"/>
+  <!-- horn glow dots -->
+  <circle cx="30" cy="3" r="1.5" fill="#c0e8ff" opacity="0.9"/>
+  <circle cx="66" cy="3" r="1.5" fill="#c0e8ff" opacity="0.9"/>
+  <!-- side hair long -->
+  <path d="M31 36 Q24 50 26 70 Q28 58 30 50 Q30 43 31 36" fill="#5070d0"/>
+  <path d="M65 36 Q72 50 70 70 Q68 58 66 50 Q66 43 65 36" fill="#5070d0"/>
+  <!-- hair tie -->
+  <circle cx="48" cy="28" r="4" fill="#c0e8ff" stroke="#70b0e0" stroke-width="0.8"/>
+  <circle cx="48" cy="28" r="2" fill="#4080c0"/>
+  <!-- eyes - amber/red unique -->
+  <ellipse cx="41" cy="42" rx="4.5" ry="4" fill="#fff0e0"/>
+  <ellipse cx="41" cy="42" rx="3.2" ry="3.2" fill="#c06030"/>
+  <ellipse cx="41" cy="42" rx="1.6" ry="1.6" fill="#601808"/>
+  <ellipse cx="42.2" cy="41" rx="0.9" ry="0.8" fill="white" opacity="0.9"/>
+  <path d="M36.5 39.5 Q41 38 45.5 39.5" stroke="#601808" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <ellipse cx="55" cy="42" rx="4.5" ry="4" fill="#fff0e0"/>
+  <ellipse cx="55" cy="42" rx="3.2" ry="3.2" fill="#c06030"/>
+  <ellipse cx="55" cy="42" rx="1.6" ry="1.6" fill="#601808"/>
+  <ellipse cx="56.2" cy="41" rx="0.9" ry="0.8" fill="white" opacity="0.9"/>
+  <path d="M50.5 39.5 Q55 38 59.5 39.5" stroke="#601808" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- shy downcast lash -->
+  <path d="M36.5 40 Q35 38.5 35.5 37.5" stroke="#4060c8" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M50.5 40 Q49 38.5 49.5 37.5" stroke="#4060c8" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M47 47 Q48 48.5 49 47" stroke="#e8a898" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+  <!-- shy small mouth -->
+  <path d="M45.5 51 Q48 53 50.5 51" stroke="#e888a0" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <!-- blush dots -->
+  <circle cx="35.5" cy="47" r="1" fill="#ffb0b0" opacity="0.7"/>
+  <circle cx="37.5" cy="48.5" r="0.8" fill="#ffb0b0" opacity="0.5"/>
+  <circle cx="60.5" cy="47" r="1" fill="#ffb0b0" opacity="0.7"/>
+  <circle cx="58.5" cy="48.5" r="0.8" fill="#ffb0b0" opacity="0.5"/>
+</svg>`;
+}
+
+const chars=[
+  {
+    svgFn: makeSVG_Ayaka,
+    name:'神里绫华', role:'任务完成助手 · SSR',
+    color1:'#1a2050',color2:'#0a1040',accent:'#80b8ff',
+    headerBg:'linear-gradient(175deg,#1a2050,#0a1040)',
+    msgs:[
+      {side:'system',text:'✨ 搞定了：你好'},
+      {side:'char',text:'主人，您的任务已全部完成了♡'},
+      {side:'char',text:'请放心交给绫华就好（轻声）'}
+    ],
+    stat1:{num:'3',lbl:'待办任务'},stat2:{num:'78%',lbl:'同步进度'},
+    affPct:'78%',hearts:'♥♥♥',
+    btnGrad:'linear-gradient(90deg,#1a2050,#80b8ff)'
+  },
+  {
+    svgFn: makeSVG_Raiden,
+    name:'雷电将军', role:'系统守护者 · SSR',
+    color1:'#1a0a40',color2:'#0d0530',accent:'#a78bfa',
+    headerBg:'linear-gradient(175deg,#1a0a40,#0d0530)',
+    msgs:[
+      {side:'system',text:'⚙ 任务执行完毕'},
+      {side:'char',text:'永恒之愿已达成。'},
+      {side:'char',text:'……尚可。（沉默）'}
+    ],
+    stat1:{num:'100%',lbl:'执行效率'},stat2:{num:'0',lbl:'遗漏项目'},
+    affPct:'55%',hearts:'♥♥',
+    btnGrad:'linear-gradient(90deg,#3d1a80,#a78bfa)'
+  },
+  {
+    svgFn: makeSVG_Noelle,
+    name:'诺艾尔', role:'骑士团通知官 · SR',
+    color1:'#3d1500',color2:'#200a00',accent:'#fb923c',
+    headerBg:'linear-gradient(175deg,#3d2800,#200a00)',
+    msgs:[
+      {side:'system',text:'⚙ 后续待办清'},
+      {side:'char',text:'任务报告完毕！诺艾尔会全部搞定的！'},
+      {side:'char',text:'嘿嘿……这点小事不算什么（握拳）'}
+    ],
+    stat1:{num:'3',lbl:'待完成项'},stat2:{num:'95%',lbl:'完成率'},
+    affPct:'90%',hearts:'♥♥♥♥',
+    btnGrad:'linear-gradient(90deg,#7c2d12,#fb923c)'
+  },
+  {
+    svgFn: makeSVG_Ganyu,
+    name:'甘雨', role:'麒麟秘书 · SSR',
+    color1:'#0a1e3d',color2:'#060d20',accent:'#93c5fd',
+    headerBg:'linear-gradient(175deg,#0a1e3d,#060d20)',
+    msgs:[
+      {side:'system',text:'✨ 搞定了：你好'},
+      {side:'char',text:'报告已整理完毕（小声）'},
+      {side:'char',text:'甘……甘雨随时准备好了……'}
+    ],
+    stat1:{num:'12',lbl:'完成记录'},stat2:{num:'99%',lbl:'准确率'},
+    affPct:'85%',hearts:'♥♥♥',
+    btnGrad:'linear-gradient(90deg,#1e3a5f,#93c5fd)'
+  }
+];
+
+let curChar=0, curPos='center';
+
+function makeStars(){
+  const s=document.getElementById('stars');s.innerHTML='';
+  for(let i=0;i<55;i++){
+    const d=document.createElement('div'),sz=Math.random()*2.5+0.5;
+    d.className='star';
+    d.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+1.5).toFixed(1)}s;animation-delay:${(Math.random()*3).toFixed(1)}s;`;
+    s.appendChild(d);
+  }
+}
+
+function posStyle(p){
+  return {
+    center:'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);',
+    'top-right':'position:absolute;top:14px;right:14px;',
+    'bottom-right':'position:absolute;bottom:14px;right:14px;',
+    'bottom-left':'position:absolute;bottom:14px;left:14px;'
+  }[p]||'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);';
+}
+
+function buildMsgs(c){
+  return c.msgs.map((m,i)=>{
+    const d=`animation-delay:${i*0.15}s`;
+    if(m.side==='system') return `<div class="msg-bubble system" style="${d}">${m.text}</div>`;
+    if(m.side==='char') return `<div class="bubble-row" style="${d}"><div class="mini-avatar char" style="background:${c.headerBg}">✦</div><div class="msg-bubble char" style="${d}">${m.text}</div></div>`;
+    return `<div class="bubble-row right" style="${d}"><div class="mini-avatar user">你</div><div class="msg-bubble user" style="${d}">${m.text}</div></div>`;
+  }).join('');
+}
+
+function render(){
+  const c=chars[curChar];
+  document.getElementById('popup-wrap').innerHTML=`
+<div class="popup-s6" id="the-popup" style="${posStyle(curPos)}">
+  <div class="s6-header">
+    <div class="s6-side-art" style="background:${c.headerBg};">${c.svgFn()}</div>
+    <div class="s6-header-info" style="background:linear-gradient(90deg,${c.color1}99,${c.color2}cc);">
+      <div class="s6-app-name">claude-notify</div>
+      <div class="s6-char-name">
+        <div class="s6-online-dot" style="background:${c.accent};"></div>${c.name}
+      </div>
+      <div class="s6-char-role">${c.role}</div>
+    </div>
+    <span class="s6-close" onclick="closeP()">×</span>
+  </div>
+  <div class="s6-body">${buildMsgs(c)}</div>
+  <div class="typing-dots">
+    <div class="dot" style="background:${c.accent}aa;"></div>
+    <div class="dot" style="background:${c.accent}aa;"></div>
+    <div class="dot" style="background:${c.accent}aa;"></div>
+  </div>
+  <div class="s6-stats">
+    <div class="stat-chip"><div class="num" style="color:${c.accent}">${c.stat1.num}</div><div class="lbl">${c.stat1.lbl}</div></div>
+    <div class="stat-chip"><div class="num" style="color:${c.accent}">${c.stat2.num}</div><div class="lbl">${c.stat2.lbl}</div></div>
+    <div class="stat-chip"><div class="num" style="color:#fbbf24;font-size:13px;">${c.hearts}</div><div class="lbl">好感度</div></div>
+  </div>
+  <div class="s6-affection">
+    <div class="aff-label">羁绊进度</div>
+    <div class="aff-track"><div class="aff-fill" id="affbar" style="width:0%;"></div></div>
+    <div class="aff-hearts">♥</div>
+  </div>
+  <div class="s6-footer">
+    <button class="s6-btn ign" onclick="closeP()">下次再说</button>
+    <button class="s6-btn main" style="background:${c.btnGrad};">和${c.name}对话 →</button>
+  </div>
+</div>`;
+  setTimeout(()=>{const b=document.getElementById('affbar');if(b)b.style.width=c.affPct;},80);
+}
+
+function setChar(i,btn){
+  curChar=i;
+  document.querySelectorAll('.ctrl-btn').forEach((b,idx)=>{if(idx<4)b.classList.remove('active');});
+  btn.classList.add('active');
+  render();
+}
+function setPos(p){curPos=p;render();}
+function replayAnim(){render();}
+function closeP(){
+  const p=document.getElementById('the-popup');
+  if(p){p.style.transition='all 0.3s ease';p.style.opacity='0';p.style.transform=(p.style.transform||'')+' scale(0.7)';setTimeout(()=>p.remove(),300);}
+}
+
+makeStars();
+render();
+</script>

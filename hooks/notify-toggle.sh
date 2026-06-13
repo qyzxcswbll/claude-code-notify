@@ -1,16 +1,13 @@
 #!/bin/bash
-# notify-toggle.sh — 双击运行，一键开关 Claude Code 通知
-
 FLAG="$HOME/.claude/.notifymute"
-
 if [ -f "$FLAG" ]; then
     rm "$FLAG"
-    TITLE="Claude Code 通知"
     BODY="通知已开启 🔔"
 else
     touch "$FLAG"
-    TITLE="Claude Code 通知"
     BODY="通知已关闭 🔕"
 fi
 
-osascript -e "display notification \"$BODY\" with title \"$TITLE\""
+# 使用环境变量传递，杜绝转义问题
+export CLAUDE_TOGGLE_BODY="$BODY"
+osascript -e 'display notification (system attribute "CLAUDE_TOGGLE_BODY") with title "Claude Code 通知"'

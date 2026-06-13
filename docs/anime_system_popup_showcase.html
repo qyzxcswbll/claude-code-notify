@@ -1,0 +1,794 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+
+.showcase {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section-title {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.style-switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.style-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.style-btn.active {
+  border-color: #8B5CF6;
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+.style-btn:hover:not(.active) {
+  background: var(--color-background-secondary);
+}
+
+.preview-area {
+  min-height: 200px;
+  background: var(--color-background-secondary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.trigger-btn {
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
+}
+.trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45); }
+.trigger-btn:active { transform: scale(0.97); }
+
+.popup-container {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ========== STYLE 1: Holographic Card ========== */
+.popup-s1 {
+  width: 300px;
+  background: rgba(15, 10, 30, 0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), inset 0 0 60px rgba(139, 92, 246, 0.05);
+  overflow: hidden;
+  pointer-events: all;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.s1-header {
+  background: linear-gradient(90deg, rgba(139,92,246,0.3), rgba(99,102,241,0.3));
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.2);
+}
+.s1-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+.s1-title { font-size: 13px; color: #c4b5fd; font-weight: 500; flex: 1; }
+.s1-close { color: #6b7280; font-size: 18px; cursor: pointer; line-height: 1; }
+.s1-body { padding: 12px 14px; }
+.s1-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.s1-item:last-child { border-bottom: none; }
+.s1-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: dotBlink 1.5s ease-in-out infinite;
+}
+.s1-dot.loading { background: #f59e0b; animation-delay: 0s; }
+.s1-dot.success { background: #10b981; animation: none; }
+.s1-text { font-size: 13px; color: #e2e8f0; }
+.s1-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.s1-progress {
+  margin-top: 10px;
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.s1-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  border-radius: 3px;
+  animation: progressFill 2s ease-out forwards;
+}
+
+/* ========== STYLE 2: Cute Chibi Card ========== */
+.popup-s2 {
+  width: 280px;
+  background: #fff0f6;
+  border-radius: 20px;
+  border: 2px solid #f9a8d4;
+  box-shadow: 0 8px 30px rgba(236, 72, 153, 0.2), 0 2px 8px rgba(0,0,0,0.1);
+  overflow: visible;
+  pointer-events: all;
+  animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+.s2-ears {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+.s2-ear {
+  width: 28px; height: 28px;
+  background: #fbcfe8;
+  border-radius: 50% 50% 0 0;
+  border: 2px solid #f9a8d4;
+  border-bottom: none;
+  position: relative;
+}
+.s2-ear::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 14px; height: 14px;
+  background: #fda4af;
+  border-radius: 50% 50% 0 0;
+}
+.s2-header {
+  background: linear-gradient(135deg, #fce7f3, #fdf2f8);
+  padding: 20px 14px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1.5px dashed #f9a8d4;
+}
+.s2-face {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fda4af, #f472b6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  animation: headShake 3s ease-in-out infinite;
+}
+.s2-title { font-size: 14px; color: #be185d; font-weight: 600; }
+.s2-sub { font-size: 11px; color: #f472b6; }
+.s2-body { padding: 12px 14px; }
+.s2-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.s2-bubble {
+  background: white;
+  border-radius: 12px 12px 12px 2px;
+  border: 1.5px solid #fce7f3;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #9d174d;
+  flex: 1;
+  animation: fadeSlideIn 0.3s ease 0.2s both;
+}
+.s2-icon { font-size: 18px; margin-top: 4px; }
+.s2-footer {
+  padding: 8px 14px 12px;
+  display: flex;
+  gap: 8px;
+}
+.s2-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 12px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.s2-btn.primary { background: #ec4899; color: white; }
+.s2-btn.secondary { background: #fce7f3; color: #be185d; border: 1.5px solid #fda4af; }
+
+/* ========== STYLE 3: Cyberpunk Terminal ========== */
+.popup-s3 {
+  width: 310px;
+  background: #0a0a0a;
+  border-radius: 8px;
+  border: 1px solid #00ff41;
+  box-shadow: 0 0 20px rgba(0,255,65,0.2), 0 0 60px rgba(0,255,65,0.05);
+  overflow: hidden;
+  pointer-events: all;
+  animation: glitchIn 0.3s ease;
+  font-family: 'Courier New', monospace;
+}
+.s3-header {
+  background: #001a00;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #00ff41;
+}
+.s3-dots { display: flex; gap: 5px; }
+.s3-dot-r { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.s3-dot-y { width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e; }
+.s3-dot-g { width: 10px; height: 10px; border-radius: 50%; background: #28c840; }
+.s3-title { font-size: 12px; color: #00ff41; flex: 1; text-align: center; letter-spacing: 2px; }
+.s3-body { padding: 14px; }
+.s3-line {
+  font-size: 12px;
+  color: #00ff41;
+  margin-bottom: 6px;
+  animation: typeIn 0.5s ease both;
+}
+.s3-line.dim { color: #006620; }
+.s3-line.warn { color: #ffbd2e; }
+.s3-line.err { color: #ff5f57; }
+.s3-line.success { color: #28c840; }
+.s3-cursor {
+  display: inline-block;
+  width: 8px; height: 14px;
+  background: #00ff41;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
+}
+.s3-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #001a00;
+}
+.s3-avatar {
+  width: 40px; height: 40px;
+  border: 1px solid #00ff41;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: #001a00;
+  animation: scanlines 3s linear infinite;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ========== STYLE 4: Glassmorphism ========== */
+.popup-s4 {
+  width: 290px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  overflow: hidden;
+  pointer-events: all;
+  animation: floatIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.s4-bg {
+  width: 100%;
+  min-height: 160px;
+  background: linear-gradient(135deg, #1a0533, #0d1b4e, #0a3d2f);
+  position: relative;
+  overflow: hidden;
+}
+.s4-orb1 {
+  position: absolute;
+  width: 80px; height: 80px;
+  background: rgba(139,92,246,0.6);
+  border-radius: 50%;
+  top: -20px; right: -10px;
+  filter: blur(30px);
+  animation: orbFloat 4s ease-in-out infinite;
+}
+.s4-orb2 {
+  position: absolute;
+  width: 60px; height: 60px;
+  background: rgba(59,130,246,0.5);
+  border-radius: 50%;
+  bottom: 0; left: 20px;
+  filter: blur(25px);
+  animation: orbFloat 5s ease-in-out infinite reverse;
+}
+.s4-char {
+  position: absolute;
+  bottom: 0; right: 20px;
+  font-size: 72px;
+  line-height: 1;
+  animation: charBob 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(139,92,246,0.8));
+}
+.s4-badge {
+  position: absolute;
+  top: 12px; left: 14px;
+  background: rgba(139,92,246,0.3);
+  border: 1px solid rgba(167,139,250,0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #c4b5fd;
+  font-weight: 500;
+}
+.s4-content {
+  padding: 14px;
+}
+.s4-name { font-size: 16px; font-weight: 600; color: white; margin-bottom: 4px; }
+.s4-desc { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+.s4-actions { display: flex; gap: 8px; }
+.s4-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.s4-btn.primary { background: rgba(139,92,246,0.8); color: white; }
+.s4-btn.secondary { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); }
+
+/* ========== STYLE 5: Paper/Sticker ========== */
+.popup-s5 {
+  width: 260px;
+  background: #fffbf0;
+  border-radius: 4px;
+  border: none;
+  box-shadow: 3px 3px 0 #e8c97e, 4px 4px 0 rgba(0,0,0,0.1);
+  overflow: hidden;
+  pointer-events: all;
+  animation: stickerIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top center;
+  position: relative;
+}
+.s5-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px; height: 20px;
+  background: rgba(255,220,120,0.7);
+  border-radius: 2px;
+  z-index: 1;
+}
+.s5-header {
+  background: #fef3c7;
+  padding: 16px 14px 10px;
+  border-bottom: 1.5px dashed #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.s5-stamp {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid #d97706;
+  background: #fffbf0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  animation: stampWobble 3s ease-in-out infinite;
+}
+.s5-title { font-size: 14px; color: #92400e; font-weight: 700; }
+.s5-date { font-size: 10px; color: #b45309; }
+.s5-body { padding: 12px 14px; }
+.s5-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #78350f;
+}
+.s5-row:last-child { margin-bottom: 0; }
+.s5-check {
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  border: 2px solid #d97706;
+  background: #fef3c7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.s5-check.done { background: #d97706; color: white; }
+
+/* ========== ANIMATIONS ========== */
+@keyframes popIn {
+  0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+  60% { transform: scale(1.1) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes glitchIn {
+  0% { clip-path: inset(40% 0 60% 0); opacity: 0; transform: translateX(-5px); }
+  20% { clip-path: inset(10% 0 80% 0); transform: translateX(5px); }
+  40% { clip-path: inset(60% 0 20% 0); transform: translateX(-3px); }
+  60% { clip-path: inset(0% 0 0% 0); transform: translateX(0); opacity: 0.8; }
+  100% { clip-path: inset(0% 0 0% 0); opacity: 1; transform: translateX(0); }
+}
+@keyframes floatIn {
+  0% { transform: scale(0.7) translateY(30px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes stickerIn {
+  0% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  70% { transform: scale(1.05) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes avatarPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(139,92,246,0); }
+}
+@keyframes headShake {
+  0%, 90%, 100% { transform: rotate(0deg); }
+  92% { transform: rotate(-5deg); }
+  96% { transform: rotate(5deg); }
+}
+@keyframes charBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10px, -10px) scale(1.1); }
+}
+@keyframes stampWobble {
+  0%, 90%, 100% { transform: rotate(0deg) scale(1); }
+  95% { transform: rotate(-8deg) scale(1.05); }
+}
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes progressFill {
+  0% { width: 0%; }
+  100% { width: 78%; }
+}
+@keyframes typeIn {
+  0% { opacity: 0; transform: translateX(-10px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeSlideIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes scanlines {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 20px; }
+}
+
+/* notification position configs */
+.notif-area {
+  width: 100%;
+  min-height: 320px;
+  background: var(--color-background-secondary);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notif-bg-1 { background: linear-gradient(135deg, #1a103a, #0d1b4e); }
+.notif-bg-2 { background: linear-gradient(135deg, #fdf2f8, #fff0f6, #fce7f3); }
+.notif-bg-3 { background: #050505; }
+.notif-bg-4 { background: linear-gradient(135deg, #1a0533, #0d1b4e, #0a3d2f); }
+.notif-bg-5 { background: #f5f0e8; }
+
+.controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.replay-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.replay-btn:hover { background: var(--color-background-secondary); }
+</style>
+
+<div class="showcase">
+  <h2 class="sr-only">二次元系统弹窗样式展示</h2>
+
+  <div>
+    <p class="section-title">选择样式</p>
+    <div class="style-switcher">
+      <button class="style-btn active" onclick="showStyle(1)">🔮 全息紫</button>
+      <button class="style-btn" onclick="showStyle(2)">🌸 猫耳萌系</button>
+      <button class="style-btn" onclick="showStyle(3)">💻 赛博朋克</button>
+      <button class="style-btn" onclick="showStyle(4)">✨ 毛玻璃</button>
+      <button class="style-btn" onclick="showStyle(5)">📝 便签纸</button>
+    </div>
+
+    <div class="notif-area notif-bg-1" id="preview">
+      <div id="popup-slot"></div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:12px; align-items:center;">
+      <button class="replay-btn" onclick="replayAnim()">↺ 重播动画</button>
+      <span style="font-size:12px; color:var(--color-text-secondary);">点击弹窗内的 × 可关闭</span>
+    </div>
+  </div>
+
+  <div>
+    <p class="section-title">排列位置</p>
+    <div class="controls">
+      <button class="replay-btn" onclick="setPos('center')">居中显示</button>
+      <button class="replay-btn" onclick="setPos('top-right')">右上角</button>
+      <button class="replay-btn" onclick="setPos('bottom-right')">右下角</button>
+      <button class="replay-btn" onclick="setPos('bottom-left')">左下角</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStyle = 1;
+let currentPos = 'center';
+
+const bgClasses = {
+  1: 'notif-bg-1',
+  2: 'notif-bg-2',
+  3: 'notif-bg-3',
+  4: 'notif-bg-4',
+  5: 'notif-bg-5'
+};
+
+const posStyles = {
+  'center': 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);',
+  'top-right': 'position:absolute; top:16px; right:16px; transform:none;',
+  'bottom-right': 'position:absolute; bottom:16px; right:16px; transform:none;',
+  'bottom-left': 'position:absolute; bottom:16px; left:16px; transform:none;'
+};
+
+const popups = {
+  1: `
+    <div class="popup-s1" style="${posStyles['center']}" id="the-popup">
+      <div class="s1-header">
+        <div class="s1-avatar">🤖</div>
+        <div style="flex:1">
+          <div class="s1-title">系统助手 · 在线</div>
+        </div>
+        <span class="s1-close" onclick="closePopup()">×</span>
+      </div>
+      <div class="s1-body">
+        <div class="s1-item">
+          <div class="s1-dot success"></div>
+          <div><div class="s1-text">任务已完成</div><div class="s1-sub">✨ 搞定了: 你好</div></div>
+        </div>
+        <div class="s1-item">
+          <div class="s1-dot loading"></div>
+          <div><div class="s1-text">后续待办清</div><div class="s1-sub">正在处理中...</div></div>
+        </div>
+        <div class="s1-item">
+          <div class="s1-dot loading" style="animation-delay:0.3s;background:#818cf8"></div>
+          <div><div class="s1-text">数据同步中</div><div class="s1-sub">78% 已完成</div></div>
+        </div>
+        <div class="s1-progress"><div class="s1-progress-fill"></div></div>
+      </div>
+    </div>`,
+  2: `
+    <div class="popup-s2" id="the-popup">
+      <div class="s2-ears">
+        <div class="s2-ear"></div>
+        <div class="s2-ear"></div>
+      </div>
+      <div class="s2-header">
+        <div class="s2-face">🐱</div>
+        <div>
+          <div class="s2-title">系统小助手</div>
+          <div class="s2-sub">claude-notify · 萌系版</div>
+        </div>
+        <span style="color:#f9a8d4; cursor:pointer; font-size:18px; margin-left:auto;" onclick="closePopup()">×</span>
+      </div>
+      <div class="s2-body">
+        <div class="s2-msg">
+          <div class="s2-icon">✨</div>
+          <div class="s2-bubble">搞定了！你的任务已全部完成啦 ♡</div>
+        </div>
+        <div class="s2-msg">
+          <div class="s2-icon">📋</div>
+          <div class="s2-bubble" style="animation-delay:0.4s;">还有3件待办事项需要你确认哦~</div>
+        </div>
+      </div>
+      <div class="s2-footer">
+        <button class="s2-btn secondary" onclick="closePopup()">稍后再说</button>
+        <button class="s2-btn primary">去看看 →</button>
+      </div>
+    </div>`,
+  3: `
+    <div class="popup-s3" id="the-popup">
+      <div class="s3-header">
+        <div class="s3-dots">
+          <div class="s3-dot-r"></div>
+          <div class="s3-dot-y"></div>
+          <div class="s3-dot-g"></div>
+        </div>
+        <div class="s3-title">SYSTEM NOTIFY</div>
+        <span style="color:#00ff41; cursor:pointer; font-size:14px;" onclick="closePopup()">×</span>
+      </div>
+      <div class="s3-body">
+        <div class="s3-avatar-row">
+          <div class="s3-avatar">🤖</div>
+          <div>
+            <div style="font-size:12px; color:#00ff41; letter-spacing:1px;">CLAUDE-NOTIFY</div>
+            <div style="font-size:10px; color:#006620;">PID: 2077 · STATUS: ACTIVE</div>
+          </div>
+        </div>
+        <div class="s3-line dim" style="animation-delay:0s">> init system check...</div>
+        <div class="s3-line success" style="animation-delay:0.2s">> ✓ task completed [OK]</div>
+        <div class="s3-line" style="animation-delay:0.4s">> ✨ 搞定了: 你好</div>
+        <div class="s3-line warn" style="animation-delay:0.6s">> ⚠ pending items: 3</div>
+        <div class="s3-line" style="animation-delay:0.8s">> awaiting input <span class="s3-cursor"></span></div>
+      </div>
+    </div>`,
+  4: `
+    <div class="popup-s4" id="the-popup">
+      <div class="s4-bg">
+        <div class="s4-orb1"></div>
+        <div class="s4-orb2"></div>
+        <div class="s4-badge">🔔 新通知</div>
+        <div class="s4-char">🧙‍♀️</div>
+      </div>
+      <div class="s4-content" style="background:rgba(15,5,35,0.9);">
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+          <div>
+            <div class="s4-name">Claude 助手</div>
+            <div class="s4-desc">claude-code-notify · 毛玻璃版</div>
+          </div>
+          <span style="color:rgba(255,255,255,0.4); cursor:pointer; font-size:20px;" onclick="closePopup()">×</span>
+        </div>
+        <div style="margin: 10px 0; padding: 10px; background:rgba(255,255,255,0.05); border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+          <div style="font-size:13px; color:rgba(255,255,255,0.9);">✨ 搞定了: 你好</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:4px;">⚙ 后续待办清</div>
+        </div>
+        <div class="s4-actions">
+          <button class="s4-btn secondary" onclick="closePopup()">忽略</button>
+          <button class="s4-btn primary">查看详情</button>
+        </div>
+      </div>
+    </div>`,
+  5: `
+    <div class="popup-s5" id="the-popup">
+      <div class="s5-tape"></div>
+      <div class="s5-header">
+        <div class="s5-stamp">📋</div>
+        <div>
+          <div class="s5-title">待办便签</div>
+          <div class="s5-date">2025 · Claude Notify</div>
+        </div>
+        <span style="color:#b45309; cursor:pointer; font-size:18px; margin-left:auto;" onclick="closePopup()">×</span>
+      </div>
+      <div class="s5-body">
+        <div class="s5-row">
+          <div class="s5-check done">✓</div>
+          <span>✨ 搞定了: 你好</span>
+        </div>
+        <div class="s5-row">
+          <div class="s5-check"></div>
+          <span>后续待办清单整理</span>
+        </div>
+        <div class="s5-row">
+          <div class="s5-check"></div>
+          <span>检查数据同步状态</span>
+        </div>
+        <div class="s5-row" style="margin-top:12px; padding-top:10px; border-top: 1.5px dashed #fbbf24;">
+          <span style="font-size:12px; color:#92400e; font-style:italic;">~ 今天也要加油哦！~</span>
+        </div>
+      </div>
+    </div>`
+};
+
+function showStyle(n) {
+  currentStyle = n;
+  document.querySelectorAll('.style-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === n - 1);
+  });
+  const preview = document.getElementById('preview');
+  Object.values(bgClasses).forEach(c => preview.classList.remove(c));
+  preview.classList.add(bgClasses[n]);
+  renderPopup();
+}
+
+function renderPopup() {
+  const slot = document.getElementById('popup-slot');
+  slot.innerHTML = popups[currentStyle];
+  applyPos();
+}
+
+function applyPos() {
+  const p = document.getElementById('the-popup');
+  if (!p) return;
+  const posMap = {
+    'center': { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', bottom: 'auto', right: 'auto' },
+    'top-right': { top: '16px', right: '16px', left: 'auto', bottom: 'auto', transform: 'none' },
+    'bottom-right': { bottom: '16px', right: '16px', left: 'auto', top: 'auto', transform: 'none' },
+    'bottom-left': { bottom: '16px', left: '16px', right: 'auto', top: 'auto', transform: 'none' }
+  };
+  const s = posMap[currentPos];
+  p.style.position = 'absolute';
+  Object.assign(p.style, s);
+}
+
+function setPos(pos) {
+  currentPos = pos;
+  renderPopup();
+}
+
+function closePopup() {
+  const p = document.getElementById('the-popup');
+  if (p) {
+    p.style.transition = 'all 0.3s ease';
+    p.style.transform = (p.style.transform || '').replace('translate(-50%,-50%)', '') + ' scale(0.7)';
+    p.style.opacity = '0';
+    setTimeout(() => p.remove(), 300);
+  }
+}
+
+function replayAnim() {
+  renderPopup();
+}
+
+showStyle(1);
+</script>
