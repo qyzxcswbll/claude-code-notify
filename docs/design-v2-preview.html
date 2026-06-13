@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Claude Notify · 定制弹窗</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body { background: #1a1a2e; font-family: 'Segoe UI', -apple-system, sans-serif; padding: 30px; }
+  h1 { color: #fff; font-size: 20px; }
+  .sub { color: #a0a0b8; font-size: 13px; margin-bottom: 20px; }
+
+  .mode-switch { display: flex; gap: 12px; margin-bottom: 20px; }
+  .mode-btn {
+    padding: 12px 20px; border-radius: 10px; border: 2px solid #3a3a5e;
+    background: #16213e; color: #d0d0e8; cursor: pointer; transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: #6a8aff; }
+  .mode-btn.active { border-color: #4ade80; background: #1a3a2e; }
+  .mode-btn .label { font-size: 14px; font-weight: 600; }
+
+  .preview-area {
+    background: #0f0f1a; border-radius: 16px; padding: 30px; min-height: 240px;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    border: 1px solid #2a2a4e; margin-bottom: 16px;
+  }
+
+  /* 优雅弹窗卡片 */
+  .toast-card {
+    width: 380px; border-radius: 14px; overflow: hidden; display: flex;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    animation: slideIn 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+  .char-strip {
+    width: 100px; min-height: 220px; flex-shrink: 0;
+    position: relative; overflow: hidden;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .char-strip img {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .char-strip .no-img {
+    width: 100%; height: 100%; z-index: 1;
+  }
+  .char-strip .no-img svg { width: 100%; height: 100%; display: block; }
+
+  .content-area { flex: 1; padding: 16px 18px; display: flex; flex-direction: column; }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .card-header .icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; color: #fff; background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+  .card-header .title { font-size: 14px; font-weight: 700; flex: 1; color: #ddd6fe; }
+  .card-header .close { font-size: 18px; cursor: pointer; opacity: 0.35; color: #8b5cf6; }
+  .card-meta { font-size: 11px; margin-bottom: 4px; color: #a78bfa; }
+  .card-divider { height: 1px; margin: 6px 0 10px; background: rgba(139,92,246,0.2); }
+  .card-body { font-size: 13px; line-height: 1.6; color: #e8e0f8; }
+  .card-body .main-text { font-size: 14px; }
+  .card-body .sub-text { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+  .progress-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .progress-track { flex: 1; height: 4px; border-radius: 4px; background: rgba(139,92,246,0.15); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#8b5cf6,#a78bfa); }
+  .progress-label { font-size: 11px; opacity: 0.6; }
+  .card-footer { display: flex; gap: 8px; margin-top: 12px; }
+  .card-footer .btn { flex: 1; padding: 8px 0; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
+  .card-footer .btn.primary { background: linear-gradient(90deg,#8b5cf6,#6d28d9); color: #fff; }
+  .card-footer .btn.ghost { background: transparent; color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+
+  .sys-toast {
+    width: 360px; background: #1e1e2e; border: 1px solid #45475a;
+    border-radius: 12px; padding: 14px 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .sys-toast .sys-title { font-size: 13px; font-weight: 600; color: #cdd6f4; margin-bottom: 2px; }
+  .sys-toast .sys-source { font-size: 11px; color: #6c7086; margin-bottom: 6px; }
+  .sys-toast .sys-body { font-size: 13px; color: #cdd6f4; }
+
+  /* 紧凑配置 */
+  .config-wrap { display: flex; gap: 12px; flex-wrap: wrap; }
+  .config-col { flex: 1; min-width: 280px; }
+  .config-box {
+    background: #16213e; border: 1px solid #2a3a6e; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .config-box h4 { color: #fff; font-size: 13px; margin-bottom: 10px; }
+  .label-sm { color: #a0a0b8; font-size: 11px; margin-bottom: 6px; }
+
+  .emoji-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .emoji-item {
+    width: 32px; height: 32px; border-radius: 6px; border: 2px solid #3a3a5e;
+    background: #1a1a2e; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .emoji-item:hover { border-color: #6a8aff; }
+  .emoji-item.active { border-color: #4ade80; background: #1a3a2e; }
+
+  .theme-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .theme-pill {
+    padding: 5px 12px; border-radius: 16px; border: 2px solid #3a3a5e;
+    background: #1a1a2e; cursor: pointer; font-size: 12px; color: #d0d0e8; transition: all 0.2s;
+  }
+  .theme-pill:hover { border-color: #6a8aff; }
+  .theme-pill.active { border-color: #4ade80; background: #1a3a2e; color: #4ade80; }
+
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px; border: 1.5px dashed #3a3a5e;
+    background: transparent; color: #a0a0b8; font-size: 12px; cursor: pointer;
+    transition: all 0.2s; position: relative;
+  }
+  .upload-btn:hover { border-color: #6a8aff; color: #d0d0e8; }
+  .upload-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .param-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .param-row label { color: #d0d0e8; font-size: 12px; }
+  .param-row input[type="range"] { width: 100px; accent-color: #6a8aff; }
+  .param-row .val { color: #a0a0b8; font-size: 11px; }
+
+  .save-bar {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px 16px; background: #0f0f1a; border-radius: 10px; border: 1px solid #2a3a6e;
+  }
+  .save-btn {
+    padding: 8px 24px; border-radius: 8px; border: none;
+    background: linear-gradient(90deg,#4ade80,#22c55e); color: #000;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .save-btn:hover { filter: brightness(1.15); }
+  .save-hint { font-size: 12px; color: #a0a0b8; }
+
+  @keyframes slideIn { from{opacity:0;transform:translateY(20px) scale(0.96);} to{opacity:1;transform:translateY(0) scale(1);} }
+</style>
+</head>
+<body>
+
+<h1>🎛️ 定制弹窗</h1>
+<div class="sub">选择模式 · 换主题 · 改图标 · 上传二次元老婆</div>
+
+<div class="mode-switch">
+  <div class="mode-btn" onclick="setMode('sys')"><div class="label">🔔 系统弹窗</div></div>
+  <div class="mode-btn active" onclick="setMode('elegant')"><div class="label">✨ 优雅弹窗</div></div>
+</div>
+
+<!-- 预览 -->
+<div class="preview-area">
+  <div id="sysPreview" style="display:none;">
+    <div class="sys-toast">
+      <div class="sys-title">Claude Code</div>
+      <div class="sys-source"><span id="sysIcon1">⚙️</span> claude-code-notify</div>
+      <div class="sys-body"><span id="sysIcon2">✨</span> 搞定了：你好</div>
+    </div>
+  </div>
+  <div id="elegantPreview">
+    <div class="toast-card" id="elegantToast">
+      <div class="char-strip" id="charStrip">
+        <div class="no-img" id="noImg">
+          <svg viewBox="0 0 100 220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3b1f6e"/>
+                <stop offset="100%" stop-color="#1a0a40"/>
+              </linearGradient>
+              <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fde8d8"/>
+                <stop offset="100%" stop-color="#f0d0b8"/>
+              </linearGradient>
+            </defs>
+            <!-- 头发背景 -->
+            <path d="M15 70 Q10 30 25 15 Q40 0 50 0 Q60 0 75 15 Q90 30 85 70 L82 90 Q80 100 78 110 Q75 120 72 130 L28 130 Q25 120 22 110 Q20 100 18 90 Z" fill="url(#hairGrad)"/>
+            <!-- 刘海 -->
+            <path d="M22 35 Q25 28 30 25 Q35 22 40 24 Q45 26 50 22 Q55 26 60 24 Q65 22 70 25 Q75 28 78 35 Q70 30 60 28 Q50 26 40 28 Q30 30 22 35 Z" fill="#4a2a8e"/>
+            <!-- 脸 -->
+            <ellipse cx="50" cy="50" rx="30" ry="32" fill="url(#skinGrad)"/>
+            <!-- 眼睛 左 -->
+            <ellipse cx="37" cy="50" rx="7" ry="6" fill="#e8f0ff"/>
+            <ellipse cx="37" cy="50" rx="5" ry="5" fill="#5a3acc"/>
+            <ellipse cx="37" cy="50" rx="2.5" ry="2.5" fill="#1a0a40"/>
+            <ellipse cx="39" cy="48.5" rx="1.5" ry="1.2" fill="#fff" opacity="0.8"/>
+            <!-- 眼睛 右 -->
+            <ellipse cx="63" cy="50" rx="7" ry="6" fill="#e8f0ff"/>
+            <ellipse cx="63" cy="50" rx="5" ry="5" fill="#5a3acc"/>
+            <ellipse cx="63" cy="50" rx="2.5" ry="2.5" fill="#1a0a40"/>
+            <ellipse cx="65" cy="48.5" rx="1.5" ry="1.2" fill="#fff" opacity="0.8"/>
+            <!-- 睫毛 -->
+            <path d="M30 46 Q33 44 36 45" stroke="#1a0a40" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+            <path d="M64 45 Q67 44 70 46" stroke="#1a0a40" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+            <!-- 嘴巴 -->
+            <path d="M45 59 Q50 63 55 59" stroke="#e88898" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <!-- 腮红 -->
+            <ellipse cx="32" cy="55" rx="4" ry="2" fill="#ffb0b0" opacity="0.35"/>
+            <ellipse cx="68" cy="55" rx="4" ry="2" fill="#ffb0b0" opacity="0.35"/>
+            <!-- 脖子 -->
+            <rect x="45" y="78" width="10" height="10" rx="3" fill="#f0d0b8"/>
+            <!-- 身体 / 和服 -->
+            <path d="M20 110 Q30 100 50 98 Q70 100 80 110 L85 170 Q70 175 50 176 Q30 175 15 170 Z" fill="#1a0a40"/>
+            <!-- 和服腰带 -->
+            <rect x="25" y="125" width="50" height="8" rx="2" fill="#8b5cf6"/>
+            <!-- 衣领 -->
+            <path d="M40 98 L50 112 L60 98" stroke="#6d28d9" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- 袖子 -->
+            <path d="M20 110 Q10 120 8 140 Q12 135 15 130 Q18 125 20 120 Z" fill="#2d1060"/>
+            <path d="M80 110 Q90 120 92 140 Q88 135 85 130 Q82 125 80 120 Z" fill="#2d1060"/>
+            <!-- 脚 -->
+            <ellipse cx="38" cy="178" rx="8" ry="3" fill="#f0d0b8"/>
+            <ellipse cx="62" cy="178" rx="8" ry="3" fill="#f0d0b8"/>
+            <!-- 光环 -->
+            <ellipse cx="50" cy="12" rx="15" ry="4" fill="#8b5cf6" opacity="0.3"/>
+          </svg>
+        </div>
+        <img id="charImg" style="display:none;" src="">
+      </div>
+      <div class="content-area">
+        <div class="card-header">
+          <div class="icon"><span id="elegantProjIcon">⚙</span></div>
+          <span class="title">claude-code-notify</span>
+          <span class="close">×</span>
+        </div>
+        <div class="card-meta"><span id="elegantMetaIcon">💬</span> 重构代码</div>
+        <div class="card-divider"></div>
+        <div class="card-body">
+          <div class="main-text"><span id="elegantDoneIcon">✨</span> 搞定了：把所有 .ts 重构为 .js</div>
+          <div class="sub-text"><span id="elegantWaitIcon">⚙</span> 后续待办清单</div>
+          <div class="progress-row">
+            <div class="progress-track"><div class="progress-fill" style="width:78%"></div></div>
+            <span class="progress-label">78%</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="btn ghost">忽略</div>
+          <div class="btn primary">查看详情</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 配置 -->
+<div class="config-wrap">
+  <div class="config-col">
+    <div class="config-box" id="sysConfig" style="display:none;">
+      <h4>🔧 系统弹窗 · 图标</h4>
+      <div class="label-sm">项目名前</div>
+      <div class="emoji-row" id="iconGrid1"></div>
+      <div class="label-sm" style="margin-top:8px;">完成 / 通知</div>
+      <div class="emoji-row" id="iconGrid2"></div>
+    </div>
+    <div class="config-box" id="elegantConfig">
+      <h4>🎨 优雅弹窗</h4>
+      <div class="label-sm">主题</div>
+      <div class="theme-row" id="themeGrid"></div>
+      <div class="label-sm" style="margin-top:8px;">图标</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div><div class="emoji-row" id="elegantIconGrid1"></div><div style="font-size:10px;color:#6a6a88;margin-top:2px;">项目名</div></div>
+        <div><div class="emoji-row" id="elegantIconGrid2"></div><div style="font-size:10px;color:#6a6a88;margin-top:2px;">完成</div></div>
+        <div><div class="emoji-row" id="elegantIconGrid3"></div><div style="font-size:10px;color:#6a6a88;margin-top:2px;">等待</div></div>
+      </div>
+      <div class="label-sm" style="margin-top:8px;">参数</div>
+      <div class="param-row">
+        <label>圆角</label><input type="range" min="4" max="28" value="14" id="er"><span class="val" id="erV">14</span>
+        <label>停留</label><input type="range" min="2" max="15" value="5" id="ed"><span class="val" id="edV">5s</span>
+      </div>
+    </div>
+  </div>
+  <div class="config-col">
+    <div class="config-box">
+      <h4>🖼️ 立绘上传</h4>
+      <div class="upload-btn" id="uploadBtn">
+        <input type="file" accept="image/png,image/jpeg,image/webp" id="fileInput" onchange="handleUpload(event)">
+        <span id="uploadText">📤 上传 PNG 立绘替换</span>
+      </div>
+      <div id="uploadStatus" style="margin-top:6px;font-size:11px;color:#a0a0b8;display:none;">
+        <span id="statusText"></span>
+        <span style="color:#f87171;cursor:pointer;margin-left:8px;" onclick="removeUpload()">✕ 移除</span>
+      </div>
+    </div>
+    <div class="save-bar">
+      <button class="save-btn" onclick="saveConfig()">💾 保存</button>
+      <span class="save-hint" id="saveHint">配置保存后即时生效</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const THEMES = [
+  {key:'holo',emoji:'🔮',name:'全息紫',
+   bg:'#1a0a30',bd:'rgba(139,92,246,0.4)',icon:'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+   title:'#ddd6fe',meta:'#a78bfa',divider:'rgba(139,92,246,0.2)',body:'#e8e0f8',
+   fill:'linear-gradient(90deg,#8b5cf6,#a78bfa)',btn:'linear-gradient(90deg,#8b5cf6,#6d28d9)',
+   ghost:'#a78bfa',ghostBd:'rgba(139,92,246,0.3)',close:'#8b5cf6',stripBg:'linear-gradient(180deg,#2d1060,#1a0a30)'},
+  {key:'cyber',emoji:'⚡',name:'赛博朋克',
+   bg:'#0a0a0a',bd:'#00ff41',icon:'linear-gradient(135deg,#00ff41,#00a020)',
+   title:'#00ff41',meta:'#00cc33',divider:'rgba(0,255,65,0.2)',body:'#a0ffa0',
+   fill:'#00ff41',btn:'#00ff41',
+   ghost:'#00ff41',ghostBd:'rgba(0,255,65,0.4)',close:'#00ff41',stripBg:'linear-gradient(180deg,#002200,#000a00)'},
+  {key:'kawaii',emoji:'🎀',name:'萌系粉',
+   bg:'#fff0f6',bd:'#f472b6',icon:'linear-gradient(135deg,#ec4899,#db2777)',
+   title:'#be185d',meta:'#f472b6',divider:'#f9a8d4',body:'#831843',
+   fill:'linear-gradient(90deg,#ec4899,#f472b6)',btn:'linear-gradient(90deg,#ec4899,#db2777)',
+   ghost:'#ec4899',ghostBd:'#f9a8d4',close:'#f472b6',stripBg:'linear-gradient(180deg,#fce7f3,#fff0f6)'},
+  {key:'dark',emoji:'🌙',name:'深色',
+   bg:'#1e1e2e',bd:'#45475a',icon:'linear-gradient(135deg,#f5c2e7,#cba6f7)',
+   title:'#cdd6f4',meta:'#a6adc8',divider:'#313244',body:'#cdd6f4',
+   fill:'linear-gradient(90deg,#89b4fa,#b4befe)',btn:'linear-gradient(90deg,#585b70,#45475a)',
+   ghost:'#a6adc8',ghostBd:'#45475a',close:'#585b70',stripBg:'linear-gradient(180deg,#181825,#11111b)'},
+  {key:'wa',emoji:'⛩',name:'和风',
+   bg:'#faf5eb',bd:'#c4a882',icon:'linear-gradient(135deg,#c4a882,#a67c52)',
+   title:'#3d2e1e',meta:'#a67c52',divider:'#c4a882',body:'#3d2e1e',
+   fill:'linear-gradient(90deg,#a67c52,#c4a882)',btn:'linear-gradient(90deg,#a67c52,#8b6914)',
+   ghost:'#a67c52',ghostBd:'#c4a882',close:'#a67c52',stripBg:'linear-gradient(180deg,#e8dccc,#f5f0e8)'}
+];
+const TP = ['⚙️','🔧','⚡','🔹','💎','⭐','📍','🎯','🔗','📌','💡','🌀','❄️','🔥','💧'];
+const TS = ['✨','✅','🎉','🌟','💪','👍','🔥','💯','⭐','🎊'];
+const TW = ['💬','⚙','📋','📝','⏳','🔄','🔔','📌','🤔','💭'];
+
+let mode='elegant', theme='holo', uploaded=null,
+  si={p:'⚙️',s:'✨'}, ei={p:'⚙',d:'✨',w:'⚙'};
+
+function g(i){return document.getElementById(i);}
+
+function buildGrid(c,l,s,cb){
+  const ct=g(c);ct.innerHTML='';
+  l.forEach(x=>{
+    const d=document.createElement('div');
+    d.className='emoji-item'+(x===s?' active':'');
+    d.textContent=x;
+    d.onclick=()=>{ct.querySelectorAll('.emoji-item').forEach(t=>t.classList.remove('active'));d.classList.add('active');cb(x);};
+    ct.appendChild(d);
+  });
+}
+
+function buildTheme(){
+  const c=g('themeGrid');c.innerHTML='';
+  THEMES.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='theme-pill'+(t.key===theme?' active':'');
+    d.textContent=t.emoji+' '+t.name;
+    d.onclick=()=>{c.querySelectorAll('.theme-pill').forEach(x=>x.classList.remove('active'));d.classList.add('active');theme=t.key;updE();};
+    c.appendChild(d);
+  });
+}
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',(m==='sys'&&i===0)||(m==='elegant'&&i===1)));
+  g('sysPreview').style.display=m==='sys'?'flex':'none';
+  g('elegantPreview').style.display=m==='elegant'?'flex':'none';
+  g('sysConfig').style.display=m==='sys'?'block':'none';
+  g('elegantConfig').style.display=m==='elegant'?'block':'none';
+}
+
+function updE(){
+  const t=THEMES.find(x=>x.key===theme);
+  const card=g('elegantToast');
+  card.style.background=t.bg;card.style.borderColor=t.bd;
+  card.querySelector('.icon').style.background=t.icon;
+  card.querySelector('.title').style.color=t.title;
+  card.querySelector('.card-meta').style.color=t.meta;
+  card.querySelector('.card-divider').style.background=t.divider;
+  card.querySelector('.card-body').style.color=t.body;
+  card.querySelector('.progress-fill').style.background=t.fill;
+  card.querySelector('.btn.primary').style.background=t.btn;
+  card.querySelector('.btn.primary').style.color=t.btn==='#00ff41'?'#000':'#fff';
+  card.querySelector('.btn.ghost').style.color=t.ghost;
+  card.querySelector('.btn.ghost').style.borderColor=t.ghostBd;
+  card.querySelector('.close').style.color=t.close;
+  g('charStrip').style.background=t.stripBg;
+  g('elegantProjIcon').textContent=ei.p;
+  g('elegantDoneIcon').textContent=ei.d;
+  g('elegantWaitIcon').textContent=ei.w;
+  g('elegantMetaIcon').textContent=ei.w;
+}
+
+function handleUpload(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=function(ev2){
+    uploaded={data:ev2.target.result,name:f.name,size:f.size};
+    g('uploadText').textContent='✅ '+f.name;
+    g('uploadStatus').style.display='block';
+    g('statusText').textContent='已上传 '+(f.size/1024).toFixed(0)+'KB';
+    g('noImg').style.display='none';
+    g('charImg').style.display='block';
+    g('charImg').src=uploaded.data;
+  };
+  r.readAsDataURL(f);
+}
+function removeUpload(){
+  uploaded=null;
+  g('uploadText').textContent='📤 上传 PNG 立绘替换';
+  g('uploadStatus').style.display='none';
+  g('fileInput').value='';
+  g('noImg').style.display='block';
+  g('charImg').style.display='none';
+}
+
+function saveConfig(){
+  const cfg={mode,theme,icons:mode==='sys'?{project:si.p,status:si.s}:{project:ei.p,done:ei.d,wait:ei.w},params:{radius:g('er').value,duration:g('ed').value},hasImage:!!uploaded};
+  if(uploaded){cfg.imageData=uploaded.data;}
+  const h=g('saveHint');
+  h.textContent='⏳ 保存中...';h.style.color='#fbbf24';
+  fetch('http://localhost:18765/save',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(cfg)
+  }).then(r=>r.json()).then(d=>{
+    h.textContent='✅ 已保存！配置已生效';h.style.color='#4ade80';
+    setTimeout(()=>{h.textContent='点击保存，配置即时生效';h.style.color='';},2000);
+  }).catch(e=>{
+    h.textContent='❌ 保存失败，请确认配置服务已启动（python3 notify-config-server.py）';h.style.color='#f87171';
+  });
+}
+
+g('er').oninput=()=>{const v=g('er').value;g('erV').textContent=v;g('elegantToast').style.borderRadius=v+'px';};
+g('ed').oninput=()=>{g('edV').textContent=g('ed').value+'s';};
+
+buildGrid('iconGrid1',TP,si.p,x=>{si.p=x;g('sysIcon1').textContent=x;});
+buildGrid('iconGrid2',TS,si.s,x=>{si.s=x;g('sysIcon2').textContent=x;});
+buildGrid('elegantIconGrid1',TP,ei.p,x=>{ei.p=x;updE();});
+buildGrid('elegantIconGrid2',TS,ei.d,x=>{ei.d=x;updE();});
+buildGrid('elegantIconGrid3',TW,ei.w,x=>{ei.w=x;updE();});
+buildTheme();updE();
+</script>
+</body>
+</html>
