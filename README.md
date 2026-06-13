@@ -12,6 +12,8 @@
 <p align="center">
   <img src="img/toast-raw.png" width="45%" alt="系统弹窗截图">
   <img src="img/toast-elegant.png" width="45%" alt="优雅弹窗截图">
+  <img src="img/hatsune.png" width="45%" alt="优雅弹窗截图">
+  <img src="img/rem.png" width="45%" alt="优雅弹窗截图">
 </p>
 
 ## 功能特性
