@@ -372,6 +372,29 @@ echo '{}' | bash ~/.claude/notify stop
 bash ~/.claude/notify-toggle.sh
 ```
 
+## V2 优雅弹窗
+
+### 模式切换（用户会说）
+- **切换优雅弹窗** / **打开定制弹窗** — 切换为优雅弹窗模式
+- **切回系统通知** — 切换为系统 Toast 模式
+
+### 安装优雅弹窗脚本
+1. 从 `hooks/notify-elegant.ps1` 读取内容，写入 `~/.claude/notify-elegant.ps1`
+2. 从 `hooks/notify-config-server.py` 读取内容，写入 `~/.claude/notify-config-server.py`
+3. 创建 `~/.claude/themes/` 目录
+
+### 启动配置服务
+用户说「定制弹窗」时：
+1. 启动配置服务：`python3 ~/.claude/notify-config-server.py &`
+2. 在浏览器打开 `docs/design-v2-preview.html`
+3. 告知用户在网页上选择主题、图标、上传立绘后点保存
+
+### 注意事项
+- 模式标记存储在 `~/.claude/notify-mode`（内容为 `raw` 或 `elegant`）
+- 配置存储在 `~/.claude/notify-config.json`
+- 立绘图片存储在 `~/.claude/themes/character.png`
+- 配置服务需要 Python 3，端口 18765
+
 ## 注意事项（给 AI 自己看）
 
 - 通知脚本文件创建后不要删，hooks 事件会一直调用它
