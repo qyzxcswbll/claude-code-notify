@@ -10,13 +10,11 @@
 ## 效果展示
 
 <p align="center">
-  <img src="img/toast-raw.png" width="45%" alt="系统弹窗">
-  <img src="img/toast-elegant.png" width="45%" alt="优雅弹窗">
-    <img src="img/Snipaste_2026-06-13_14-11-46.png" width="45%" alt="优雅弹窗">
-      <img src="img/Snipaste_2026-06-13_14-12-14.png" width="45%" alt="优雅弹窗">
+  <img src="img/toast-raw.png" width="45%" alt="系统弹窗截图">
+  <img src="img/toast-elegant.png" width="45%" alt="优雅弹窗截图">
 </p>
 
-## Feature
+## 功能特性
 
 - 🔔 **桌面通知** — 任务完成或需要你回应时，系统原生弹窗，不打断操作
 - 📝 **三行层级** — 项目名 + 💎 会话名 + 任务内容，一目了然
@@ -24,11 +22,19 @@
 - ⚡️ **零依赖** — 无需安装任何第三方包，调用 Windows/macOS 原生通知 API
 - 🪄 **一次配置永久生效** — skill 一键安装，一条命令完成配置，以后自动通知
 - 🖥️ **跨平台** — Windows 10/11 Toast 通知 & macOS 通知中心
-- 🎨 **优雅弹窗** — 自定义 WinForms UI，5 种主题，支持二次元立绘、按钮
+- 🎨 **优雅弹窗** ⚠️ Windows only — 自定义 WinForms UI，5 种主题，支持二次元立绘、按钮
 - 🎛️ **定制配置** — 可视化网页配置，自由调整主题/图标/上传立绘
 - 🔄 **模式切换** — 一句话在系统弹窗和优雅弹窗间切换
 
 ## 安装
+
+需要先安装 [skills.sh](https://skills.sh) CLI 工具：
+
+```bash
+npm install -g skills
+```
+
+然后安装本技能：
 
 ```bash
 npx skills add qyzxcswbll/claude-code-notify -g
@@ -46,7 +52,7 @@ npx skills add qyzxcswbll/claude-code-notify -g
 支持两种模式自由切换：
 
 - **系统弹窗 (V1)** — 原生 Toast 通知，轻量简洁
-- **优雅弹窗 (V2)** — 自定义 WinForms 窗口，支持主题/立绘/按钮
+- **优雅弹窗 (V2)** ⚠️ Windows only — 自定义 WinForms 窗口，支持主题/立绘/按钮
 
 说 **「切换优雅弹窗」** 或 **「切回系统通知」** 即时切换，无需重启。
 
@@ -78,8 +84,8 @@ npx skills add qyzxcswbll/claude-code-notify -g
   ```
 ## 功能对比
 
-| 特性 | 系统弹窗 (V1) | 优雅弹窗 (V2) |
-|------|:----------:|:----------:|
+| 特性 | 系统弹窗 (V1) | 优雅弹窗 (V2) ⚠️ Windows only |
+|------|:----------:|:---------------------------:|
 | 通知方式 | Windows Toast / macOS 通知中心 | WinForms 自绘窗口 |
 | 视觉风格 | 系统原生 | 自定义主题（5 种） |
 | 项目名 + 会话名 | ✅ | ✅ 层级更清晰 |
@@ -103,7 +109,7 @@ npx skills add qyzxcswbll/claude-code-notify -g
   ```bash
   npx skills add qyzxcswbll/claude-code-notify -g --yes
   ```
-  然后在 Claude Code 中说「配置桌面通知」重新生成脚本。
+  `--yes` 表示自动确认，跳过交互式提示。然后在 Claude Code 中说「配置桌面通知」重新生成脚本。
 
 - **安装后通知没有弹出来？**
 
