@@ -94,7 +94,7 @@ fi
 
 # mac 版副标题放在标题行：项目名 💎 会话名
 if [ -n "$SESSION_NAME" ]; then
-    TITLE="$TITLE ⚙️ $SESSION_NAME"
+    TITLE="$TITLE ⚙ $SESSION_NAME"
 fi
 
 BODY_ESC=$(echo "$BODY" | sed 's/"/\\"/g' | tr '\n' ' ')
