@@ -1,175 +1,272 @@
-param(
+﻿param(
     [string]$Event = 'stop',
     [string]$ProjectName = "",
     [string]$SessionName = "",
     [string]$Context = ""
 )
 
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 # ===== 读取配置 =====
 $configPath = Join-Path $env:USERPROFILE '.claude\notify-config.json'
 $theme = "holo"
 $radius = 14
+$duration = 5
 if (Test-Path $configPath) {
     try {
         $cfg = Get-Content $configPath -Encoding UTF8 | ConvertFrom-Json
         if ($cfg.theme) { $theme = $cfg.theme }
         if ($cfg.params.radius) { $radius = [int]$cfg.params.radius }
+        if ($cfg.params.duration) { $duration = [int]$cfg.params.duration }
     } catch {}
 }
 
 # ===== 主题定义 =====
 $themes = @{
-    holo = @{ bg = [System.Drawing.Color]::FromArgb(255,26,10,48); bd = [System.Drawing.Color]::FromArgb(200,139,92,246); iconBg = [System.Drawing.Color]::FromArgb(255,139,92,246); titleColor = [System.Drawing.Color]::FromArgb(255,221,214,254); metaColor = [System.Drawing.Color]::FromArgb(255,167,139,250); bodyColor = [System.Drawing.Color]::FromArgb(255,232,224,248); btnColor = [System.Drawing.Color]::FromArgb(255,139,92,246); ghostColor = [System.Drawing.Color]::FromArgb(255,167,139,250); strip1 = [System.Drawing.Color]::FromArgb(255,45,16,96); strip2 = [System.Drawing.Color]::FromArgb(255,26,10,48) }
-    cyber = @{ bg = [System.Drawing.Color]::FromArgb(255,10,10,10); bd = [System.Drawing.Color]::FromArgb(255,0,255,65); iconBg = [System.Drawing.Color]::FromArgb(255,0,255,65); titleColor = [System.Drawing.Color]::FromArgb(255,0,255,65); metaColor = [System.Drawing.Color]::FromArgb(255,0,204,51); bodyColor = [System.Drawing.Color]::FromArgb(255,160,255,160); btnColor = [System.Drawing.Color]::FromArgb(255,0,255,65); ghostColor = [System.Drawing.Color]::FromArgb(255,0,255,65); strip1 = [System.Drawing.Color]::FromArgb(255,0,34,0); strip2 = [System.Drawing.Color]::FromArgb(255,0,10,0) }
-    kawaii = @{ bg = [System.Drawing.Color]::FromArgb(255,255,240,246); bd = [System.Drawing.Color]::FromArgb(255,244,114,182); iconBg = [System.Drawing.Color]::FromArgb(255,236,72,153); titleColor = [System.Drawing.Color]::FromArgb(255,190,24,93); metaColor = [System.Drawing.Color]::FromArgb(255,244,114,182); bodyColor = [System.Drawing.Color]::FromArgb(255,131,24,67); btnColor = [System.Drawing.Color]::FromArgb(255,236,72,153); ghostColor = [System.Drawing.Color]::FromArgb(255,236,72,153); strip1 = [System.Drawing.Color]::FromArgb(255,252,231,243); strip2 = [System.Drawing.Color]::FromArgb(255,255,240,246) }
-    dark = @{ bg = [System.Drawing.Color]::FromArgb(255,30,30,46); bd = [System.Drawing.Color]::FromArgb(255,69,71,90); iconBg = [System.Drawing.Color]::FromArgb(255,203,166,247); titleColor = [System.Drawing.Color]::FromArgb(255,205,214,244); metaColor = [System.Drawing.Color]::FromArgb(255,166,173,200); bodyColor = [System.Drawing.Color]::FromArgb(255,205,214,244); btnColor = [System.Drawing.Color]::FromArgb(255,88,91,112); ghostColor = [System.Drawing.Color]::FromArgb(255,166,173,200); strip1 = [System.Drawing.Color]::FromArgb(255,24,24,37); strip2 = [System.Drawing.Color]::FromArgb(255,17,17,27) }
-    wa = @{ bg = [System.Drawing.Color]::FromArgb(255,250,245,235); bd = [System.Drawing.Color]::FromArgb(255,196,168,130); iconBg = [System.Drawing.Color]::FromArgb(255,196,168,130); titleColor = [System.Drawing.Color]::FromArgb(255,61,46,30); metaColor = [System.Drawing.Color]::FromArgb(255,166,124,82); bodyColor = [System.Drawing.Color]::FromArgb(255,61,46,30); btnColor = [System.Drawing.Color]::FromArgb(255,166,124,82); ghostColor = [System.Drawing.Color]::FromArgb(255,166,124,82); strip1 = [System.Drawing.Color]::FromArgb(255,232,220,204); strip2 = [System.Drawing.Color]::FromArgb(255,245,240,232) }
+    holo = @{ bg = "#1A0A30"; bg2 = "#181029"; bd = "#8B5CF6"; strip1 = "#2D1060"; strip2 = "#1A0A30"; titleColor = "#DDD6FE"; metaColor = "#A78BFA"; bodyColor = "#E8E0F8"; iconBg = "#8B5CF6"; ghostColor = "#A78BFA" }
+    cyber = @{ bg = "#0A0A0A"; bg2 = "#0A0A0A"; bd = "#00FF41"; strip1 = "#002200"; strip2 = "#000A00"; titleColor = "#00FF41"; metaColor = "#00CC33"; bodyColor = "#A0FFA0"; iconBg = "#00FF41"; ghostColor = "#00FF41" }
+    kawaii = @{ bg = "#FFF0F6"; bg2 = "#F9E4EE"; bd = "#F472B6"; strip1 = "#FCE7F3"; strip2 = "#FFF0F6"; titleColor = "#BE185D"; metaColor = "#F472B6"; bodyColor = "#831843"; iconBg = "#EC4899"; ghostColor = "#EC4899" }
+    dark = @{ bg = "#1E1E2E"; bg2 = "#171726"; bd = "#45475A"; strip1 = "#181825"; strip2 = "#11111B"; titleColor = "#CDD6F4"; metaColor = "#A6ADC8"; bodyColor = "#CDD6F4"; iconBg = "#CBA6F7"; ghostColor = "#A6ADC8" }
+    wa = @{ bg = "#FAF5EB"; bg2 = "#F2ECE0"; bd = "#C4A882"; strip1 = "#E8DCCC"; strip2 = "#F5F0E8"; titleColor = "#3D2E1E"; metaColor = "#A67C52"; bodyColor = "#3D2E1E"; iconBg = "#C4A882"; ghostColor = "#A67C52" }
+    furina = @{ bg = "#F4FAFF"; bg2 = "#E8F2FC"; bd = "#96C8EB"; strip1 = "#FAF8F4"; strip2 = "#C6E2FA"; titleColor = "#1E3A5F"; metaColor = "#6491C3"; bodyColor = "#3A5478"; iconBg = "#60A5FA"; ghostColor = "#82AAD2" }
 }
 $t = $themes[$theme]; if (-not $t) { $t = $themes["holo"] }
 
-# ===== 窗口创建 =====
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Claude Code"
-$form.ShowInTaskbar = $false
-$form.TopMost = $true
-$form.FormBorderStyle = 'None'
-$form.BackColor = $t.bg
-$form.Opacity = 0
-$form.WindowState = 'Normal'
-$form.StartPosition = 'Manual'
+# 图标路径
+$iconDir = Join-Path $env:USERPROFILE '.claude\themes\icons'
+$charPath = Join-Path $env:USERPROFILE '.claude\themes\character.png'
 
-$fw = 400; $fh = 220
-$screen = [System.Windows.Forms.Screen]::PrimaryScreen
-$form.Location = New-Object System.Drawing.Point(($screen.WorkingArea.Right - $fw - 16), ($screen.WorkingArea.Bottom - $fh - 16))
-$form.Size = New-Object System.Drawing.Size($fw, $fh)
+# ===== WPF 弹窗 =====
+Add-Type -TypeDefinition @"
+using System;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Media.Effects;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 
-# 圆角
-$path = New-Object System.Drawing.Drawing2D.GraphicsPath
-$path.AddArc(0,0,$radius*2,$radius*2,180,90)
-$path.AddArc($fw-$radius*2-1,0,$radius*2,$radius*2,270,90)
-$path.AddArc($fw-$radius*2-1,$fh-$radius*2-1,$radius*2,$radius*2,0,90)
-$path.AddArc(0,$fh-$radius*2-1,$radius*2,$radius*2,90,90)
-$path.CloseFigure()
-$form.Region = [System.Drawing.Region]::new($path)
-
-# ===== 自绘 =====
-$form.Add_Paint({
-    param($sender, $e)
-    $g = $e.Graphics
-    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
-
-    $fw2 = 400; $fh2 = 220
-
-    # 角色区（左栏 100px）
-    $stripBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-        (New-Object System.Drawing.Rectangle(0,0,100,$fh2)),
-        $t.strip1, $t.strip2, 90)
-    $g.FillRectangle($stripBrush, 0, 0, 100, $fh2)
-
-    # 角色图
-    $charPath = Join-Path $env:USERPROFILE '.claude\themes\character.png'
-    if (Test-Path $charPath) {
-        $img = [System.Drawing.Image]::FromFile($charPath)
-        $g.DrawImage($img, 0, 0, 100, $fh2)
+public static class NotifyWindow
+{
+    private static Color C(string hex)
+    {
+        return (Color)ColorConverter.ConvertFromString(hex);
     }
 
-    $x0 = 114; $y0 = 20
-
-    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-
-    # == 一级标题：项目名图标 + 文字 ==
-    $projName = if ($ProjectName) { $ProjectName } else { "Claude Code" }
-    # 图标圆角背景
-    $gearBgBrush = New-Object System.Drawing.SolidBrush($t.iconBg)
-    $gearBgPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $gr = 4; $gbx = $x0; $gby = ($y0+4); $gw = 22; $gh = 22
-    $gearBgPath.AddArc($gbx, $gby, $gr*2, $gr*2, 180, 90)
-    $gearBgPath.AddArc($gbx+$gw-$gr*2, $gby, $gr*2, $gr*2, 270, 90)
-    $gearBgPath.AddArc($gbx+$gw-$gr*2, $gby+$gh-$gr*2, $gr*2, $gr*2, 0, 90)
-    $gearBgPath.AddArc($gbx, $gby+$gh-$gr*2, $gr*2, $gr*2, 90, 90)
-    $gearBgPath.CloseFigure()
-    $g.FillPath($gearBgBrush, $gearBgPath)
-    $gp = Join-Path $env:USERPROFILE '.claude\themes\icons\gear.png'; if (Test-Path $gp) { $gi = [System.Drawing.Image]::FromFile($gp); $g.DrawImage($gi, ($x0+2), ($y0+6), 18, 18); $gi.Dispose() }
-    $h1Font = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
-    $h1X = $x0 + 22 + 8
-    [System.Windows.Forms.TextRenderer]::DrawText($g, $projName, $h1Font,
-        [System.Drawing.Point]::new($h1X, $y0), $t.titleColor)
-
-    # == 二级标题：会话名图标 + 文字 ==
-    $sessY = $y0 + 34
-    if ($SessionName) {
-        $chp = Join-Path $env:USERPROFILE '.claude\themes\icons\chat.png'; if (Test-Path $chp) { $ci = [System.Drawing.Image]::FromFile($chp); $g.DrawImage($ci, $x0, $sessY+2, 16, 16); $ci.Dispose() }
-        $h2Font = New-Object System.Drawing.Font("Segoe UI", 10)
-        $h2X = $x0 + 16 + 4
-        [System.Windows.Forms.TextRenderer]::DrawText($g, $SessionName, $h2Font,
-            [System.Drawing.Point]::new($h2X, $sessY), $t.metaColor)
+    private static Image MakeIcon(string path, double w, double h, Thickness m)
+    {
+        if (String.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+        Image img = new Image();
+        img.Width = w; img.Height = h; img.Margin = m;
+        img.Source = new BitmapImage(new Uri(path, UriKind.Absolute));
+        return img;
     }
 
-    # == 分割线 ==
-    $divY = $sessY + 22
-    $divPen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(120,$t.bd.R,$t.bd.G,$t.bd.B))
-    $g.DrawLine($divPen, $x0, $divY, ($fw2-16), $divY)
-
-    # == 内容 ==
-    $bodyFont = New-Object System.Drawing.Font("Segoe UI", 11)
-    $isStop = ($Event -eq 'stop')
-    if ($isStop) {
-        $bodyText = if ($Context) { "搞定了：$Context" } else { "搞定了~" }
-        $ckp = Join-Path $env:USERPROFILE '.claude\themes\icons\check.png'; if (Test-Path $ckp) { $di = [System.Drawing.Image]::FromFile($ckp); $g.DrawImage($di, $x0, ($divY + 12), 16, 16); $di.Dispose() }
-    } else {
-        $bodyText = if ($Context) { "$Context" } else { "需要你瞅一眼" }
-        $blp = Join-Path $env:USERPROFILE '.claude\themes\icons\bell.png'; if (Test-Path $blp) { $bi = [System.Drawing.Image]::FromFile($blp); $g.DrawImage($bi, $x0, ($divY + 10), 16, 16); $bi.Dispose() }
+    private static string LoadArg(string s)
+    {
+        if (s == null) return "";
+        return s;
     }
-    $bodyRect = New-Object System.Drawing.Rectangle(($x0 + 20), ($divY + 10), ($fw2 - $x0 - 36), ($fh2 - ($divY + 10) - 50))
-    $bodyFlags = [System.Windows.Forms.TextFormatFlags]::WordBreak -bor [System.Windows.Forms.TextFormatFlags]::EndEllipsis
-    [System.Windows.Forms.TextRenderer]::DrawText($g, $bodyText, $bodyFont, $bodyRect, $t.bodyColor, $bodyFlags)
 
-    # == 关闭按钮（固定在右下角） ==
-    $subFont = New-Object System.Drawing.Font("Segoe UI Emoji", 10)
-    if (-not $SessionName) { $metaBrush = New-Object System.Drawing.SolidBrush($t.metaColor) }
-    $btnW = 80; $btnH = 28
-    $btnRect = New-Object System.Drawing.Rectangle(($fw2 - $btnW - 16), ($fh2 - $btnH - 14), $btnW, $btnH)
-    $ghostPen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(100,$t.ghostColor.R,$t.ghostColor.G,$t.ghostColor.B))
-    # 圆角按钮路径
-    $btnRadius = 8
-    $btnPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $btnPath.AddArc($btnRect.X, $btnRect.Y, $btnRadius*2, $btnRadius*2, 180, 90)
-    $btnPath.AddArc($btnRect.Right - $btnRadius*2, $btnRect.Y, $btnRadius*2, $btnRadius*2, 270, 90)
-    $btnPath.AddArc($btnRect.Right - $btnRadius*2, $btnRect.Bottom - $btnRadius*2, $btnRadius*2, $btnRadius*2, 0, 90)
-    $btnPath.AddArc($btnRect.X, $btnRect.Bottom - $btnRadius*2, $btnRadius*2, $btnRadius*2, 90, 90)
-    $btnPath.CloseFigure()
-    $g.DrawPath($ghostPen, $btnPath)
-    $btnFlags = [System.Windows.Forms.TextFormatFlags]::HorizontalCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter
-    [System.Windows.Forms.TextRenderer]::DrawText($g, "忽略", $subFont, $btnRect, $t.ghostColor, $btnFlags)
-})
+    public static void ShowBlocking(
+        string projectName, string sessionName, string context, bool isStop,
+        string charPath, string iconDir,
+        string bg, string bg2, string strip1, string strip2,
+        string titleColor, string metaColor, string bodyColor, string iconBg, string ghostColor, string bdColor,
+        int radius, int durationMs)
+    {
+        projectName = LoadArg(projectName);
+        sessionName = LoadArg(sessionName);
+        context = LoadArg(context);
 
-# ===== 渐入动画 =====
-$fadeInTimer = New-Object System.Windows.Forms.Timer
-$fadeInTimer.Interval = 16
-$fadeInTimer.Add_Tick({
-    if ($form.Opacity -lt 1) { $form.Opacity = [Math]::Min($form.Opacity + 0.06, 1) }
-    else { $fadeInTimer.Stop() }
-})
-$fadeInTimer.Start()
+        Window win = new Window();
+        win.AllowsTransparency = true;
+        win.Background = Brushes.Transparent;
+        win.WindowStyle = WindowStyle.None;
+        win.Topmost = true;
+        win.ShowInTaskbar = false;
+        win.ResizeMode = ResizeMode.NoResize;
+        win.Width = 448;
+        win.Height = 268;
+        win.Opacity = 0;
 
-# ===== 点击关闭 =====
-$form.Add_Click({ $form.Close() })
+        Rect wa = SystemParameters.WorkArea;
+        win.Left = wa.Right - win.Width - 8;
+        win.Top = wa.Bottom - win.Height - 8;
 
-# ===== 自动关闭 =====
-$duration = 5000; $elapsed = 0
-$lifeTimer = New-Object System.Windows.Forms.Timer
-$lifeTimer.Interval = 50
-$lifeTimer.Add_Tick({
-    $script:elapsed += 50
-    if ($script:elapsed -ge $duration -and $form.Opacity -gt 0) {
-        $form.Opacity = [Math]::Max($form.Opacity - 0.05, 0)
-        if ($form.Opacity -le 0) { $lifeTimer.Stop(); $form.Close() }
+        // 主体卡片（含阴影留白）
+        Border body = new Border();
+        body.CornerRadius = new CornerRadius(radius);
+        body.Margin = new Thickness(24);
+        body.Background = new LinearGradientBrush(C(bg), C(bg2), 90);
+        body.BorderBrush = new SolidColorBrush(Color.FromArgb(150, C(bdColor).R, C(bdColor).G, C(bdColor).B));
+        body.BorderThickness = new Thickness(1);
+        body.Effect = new DropShadowEffect();
+        ((DropShadowEffect)body.Effect).BlurRadius = 20;
+        ((DropShadowEffect)body.Effect).ShadowDepth = 3;
+        ((DropShadowEffect)body.Effect).Direction = 270;
+        ((DropShadowEffect)body.Effect).Opacity = 0.45;
+        ((DropShadowEffect)body.Effect).Color = Color.FromArgb(90, 15, 35, 85);
+
+        Grid grid = new Grid();
+        ColumnDefinition colL = new ColumnDefinition();
+        colL.Width = new GridLength(100);
+        ColumnDefinition colR = new ColumnDefinition();
+        colR.Width = new GridLength(1, GridUnitType.Star);
+        grid.ColumnDefinitions.Add(colL);
+        grid.ColumnDefinitions.Add(colR);
+        body.Child = grid;
+
+        // 左栏：渐变底 + 立绘（ImageBrush 随 Border 圆角裁剪）
+        Grid left = new Grid();
+        Grid.SetColumn(left, 0);
+        Border gradBorder = new Border();
+        gradBorder.CornerRadius = new CornerRadius(radius, 0, 0, radius);
+        gradBorder.Background = new LinearGradientBrush(C(strip1), C(strip2), 90);
+        left.Children.Add(gradBorder);
+        if (!String.IsNullOrEmpty(charPath) && File.Exists(charPath))
+        {
+            Border imgBorder = new Border();
+            imgBorder.CornerRadius = new CornerRadius(radius, 0, 0, radius);
+            ImageBrush ib = new ImageBrush();
+            ib.ImageSource = new BitmapImage(new Uri(charPath, UriKind.Absolute));
+            ib.Stretch = Stretch.Fill;
+            imgBorder.Background = ib;
+            left.Children.Add(imgBorder);
+        }
+        grid.Children.Add(left);
+
+        // 右栏内容
+        StackPanel right = new StackPanel();
+        right.Margin = new Thickness(14, 20, 14, 14);
+        Grid.SetColumn(right, 1);
+        grid.Children.Add(right);
+
+        // 标题行：图标 + 项目名
+        StackPanel titleRow = new StackPanel();
+        titleRow.Orientation = Orientation.Horizontal;
+        Border gearBg = new Border();
+        gearBg.Width = 22; gearBg.Height = 22;
+        gearBg.CornerRadius = new CornerRadius(4);
+        gearBg.Background = new SolidColorBrush(C(iconBg));
+        gearBg.VerticalAlignment = VerticalAlignment.Center;
+        Image gearImg = MakeIcon(System.IO.Path.Combine(iconDir, "gear.png"), 18, 18, new Thickness(2));
+        if (gearImg != null) gearBg.Child = gearImg;
+        titleRow.Children.Add(gearBg);
+        TextBlock title = new TextBlock();
+        title.Text = String.IsNullOrEmpty(projectName) ? "Claude Code" : projectName;
+        title.FontSize = 16;
+        title.FontWeight = FontWeights.Bold;
+        title.Foreground = new SolidColorBrush(C(titleColor));
+        title.Margin = new Thickness(8, 0, 0, 0);
+        title.VerticalAlignment = VerticalAlignment.Center;
+        title.TextTrimming = TextTrimming.CharacterEllipsis;
+        titleRow.Children.Add(title);
+        right.Children.Add(titleRow);
+
+        // 会话行
+        if (!String.IsNullOrEmpty(sessionName))
+        {
+            StackPanel sessRow = new StackPanel();
+            sessRow.Orientation = Orientation.Horizontal;
+            sessRow.Margin = new Thickness(0, 12, 0, 0);
+            Image chatImg = MakeIcon(System.IO.Path.Combine(iconDir, "chat.png"), 16, 16, new Thickness(1, 2, 5, 0));
+            if (chatImg != null) sessRow.Children.Add(chatImg);
+            TextBlock sess = new TextBlock();
+            sess.Text = sessionName;
+            sess.FontSize = 10;
+            sess.Foreground = new SolidColorBrush(C(metaColor));
+            sess.VerticalAlignment = VerticalAlignment.Center;
+            sess.TextTrimming = TextTrimming.CharacterEllipsis;
+            sessRow.Children.Add(sess);
+            right.Children.Add(sessRow);
+        }
+
+        // 分隔线
+        Rectangle sep = new Rectangle();
+        sep.Height = 1;
+        sep.Margin = new Thickness(0, 10, 0, 0);
+        Color bdC = C(bdColor);
+        sep.Fill = new SolidColorBrush(Color.FromArgb(120, bdC.R, bdC.G, bdC.B));
+        right.Children.Add(sep);
+
+        // 正文行：图标 + 内容
+        StackPanel bodyRow = new StackPanel();
+        bodyRow.Orientation = Orientation.Horizontal;
+        bodyRow.Margin = new Thickness(0, 10, 0, 0);
+        Image bodyIcon = MakeIcon(System.IO.Path.Combine(iconDir, isStop ? "check.png" : "bell.png"), 16, 16, new Thickness(1, 2, 6, 0));
+        if (bodyIcon != null) bodyRow.Children.Add(bodyIcon);
+        TextBlock bodyText = new TextBlock();
+        if (isStop)
+            bodyText.Text = String.IsNullOrEmpty(context) ? "搞定了~" : "搞定了：" + context;
+        else
+            bodyText.Text = String.IsNullOrEmpty(context) ? "需要你瞅一眼" : context;
+        bodyText.FontSize = 11;
+        bodyText.Foreground = new SolidColorBrush(C(bodyColor));
+        bodyText.TextWrapping = TextWrapping.Wrap;
+        bodyText.MaxWidth = 248;
+        bodyText.MaxHeight = 100;
+        bodyRow.Children.Add(bodyText);
+        right.Children.Add(bodyRow);
+
+        // 忽略按钮（右下角）
+        Border btn = new Border();
+        Grid.SetColumn(btn, 1);
+        btn.HorizontalAlignment = HorizontalAlignment.Right;
+        btn.VerticalAlignment = VerticalAlignment.Bottom;
+        btn.Margin = new Thickness(0, 0, 16, 14);
+        btn.CornerRadius = new CornerRadius(8);
+        Color gc = C(ghostColor);
+        btn.BorderBrush = new SolidColorBrush(Color.FromArgb(100, gc.R, gc.G, gc.B));
+        btn.BorderThickness = new Thickness(1);
+        btn.Padding = new Thickness(16, 4, 16, 4);
+        TextBlock btnText = new TextBlock();
+        btnText.Text = "忽略";
+        btnText.FontSize = 10;
+        btnText.Foreground = new SolidColorBrush(Color.FromArgb(255, gc.R, gc.G, gc.B));
+        btn.Child = btnText;
+        grid.Children.Add(btn);
+
+        win.Content = body;
+
+        // 渐入
+        DoubleAnimation animIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200));
+        animIn.DecelerationRatio = 0.4;
+        win.BeginAnimation(Window.OpacityProperty, animIn);
+
+        // 自动关闭
+        DispatcherTimer timer = new DispatcherTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(durationMs);
+        timer.Tick += delegate
+        {
+            timer.Stop();
+            DoubleAnimation animOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(450));
+            animOut.Completed += delegate { win.Close(); };
+            win.BeginAnimation(Window.OpacityProperty, animOut);
+        };
+        timer.Start();
+
+        // 点击关闭
+        win.MouseLeftButtonDown += delegate { win.Close(); };
+
+        win.Closed += delegate
+        {
+            Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Normal);
+        };
+
+        win.Show();
+        Dispatcher.Run();
     }
-})
-$lifeTimer.Start()
+}
+"@ -ReferencedAssemblies PresentationFramework,PresentationCore,WindowsBase,System.Xaml
 
-[System.Windows.Forms.Application]::Run($form)
+$isStop = ($Event -eq 'stop')
+[NotifyWindow]::ShowBlocking(
+    $ProjectName, $SessionName, $Context, $isStop,
+    $charPath, $iconDir,
+    $t.bg, $t.bg2, $t.strip1, $t.strip2,
+    $t.titleColor, $t.metaColor, $t.bodyColor, $t.iconBg, $t.ghostColor, $t.bd,
+    $radius, ($duration * 1000))
